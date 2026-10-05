@@ -3,6 +3,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
+import { createPanel } from "./eink";
 
 const USE_WEBGL = false;
 const INK = "rgba(28, 42, 96, 0.88)";       // fountain-pen blue
@@ -33,12 +34,49 @@ const ANSI: [string, string][] = [
   ["brightBlack", "#666666"], ["brightRed", "#f14c4c"], ["brightGreen", "#23d18b"], ["brightYellow", "#f5f543"],
   ["brightBlue", "#3b8eea"], ["brightMagenta", "#d670d6"], ["brightCyan", "#29b8db"], ["brightWhite", "#ffffff"],
 ];
-const toGrey = (hex: string) => {
+/**
+ * Kaleido: the same panel under a color filter array. Colors come out muted
+ * (about half saturation, at the grey level's lightness) and quantized to
+ * 4 bits per channel, the panel's 4096 colors.
+ */
+function kaleido(grey: RGB, r: number, g: number, b: number): RGB {
+  const y = luma(r, g, b) * 255 || 1, k = luma(...grey) * 255 / y;
+  return grey.map((v, i) => {
+    const c = Math.min(255, [r, g, b][i] * k);
+    return Math.round((v * 0.5 + c * 0.5) / 17) * 17;
+  }) as RGB;
+}
+const kaleidoFg = (r: number, g: number, b: number) => kaleido(einkFg(r, g, b), r, g, b);
+const kaleidoBg = (r: number, g: number, b: number) => kaleido(einkBg(r, g, b), r, g, b);
+const panelAnsi = (map: (r: number, g: number, b: number) => RGB) => Object.fromEntries(ANSI.map(([k, hex]) => {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return `rgb(${einkFg(r, g, b).join(",")})`;
-};
+  return [k, `rgb(${map(r, g, b).join(",")})`];
+}));
 
-type ThemeName = "paper" | "eink";
+type ThemeName = "paper" | "eink" | "kaleido";
+const panelTheme = (map: (r: number, g: number, b: number) => RGB) => ({
+  font: "Monaspace Xenon",
+  lineHeight: 1.4,
+  // the panel cannot blink without a refresh flicker; readers show a steady block
+  cursorBlink: false,
+  cursorStyle: "block" as const,
+  input: level(0),              // typed commands: full black; output one level up
+  theme: {
+    // opaque, so SGR 7 inverse is a true black block, as on the panel
+    background: grey(15),
+    foreground: grey(1),
+    cursor: grey(0),
+    cursorAccent: grey(15),
+    // selection inverts: the e-reader highlight idiom
+    selectionBackground: grey(0),
+    selectionForeground: grey(15),
+    selectionInactiveBackground: grey(10),
+    ...panelAnsi(map),
+    black: grey(0),
+    white: grey(9),
+    brightWhite: grey(3),
+  },
+});
 const THEMES = {
   paper: {
     font: "Monaspace Radon",
@@ -63,31 +101,12 @@ const THEMES = {
       white: "#6b6f7b",       brightWhite: "#3a3d47",
     },
   },
-  eink: {
-    font: "Monaspace Xenon",
-    lineHeight: 1.4,
-    // the panel cannot blink without a refresh flicker; readers show a steady block
-    cursorBlink: false,
-    cursorStyle: "block" as const,
-    input: level(0),              // typed commands: full black; output one level up
-    theme: {
-      // opaque, so SGR 7 inverse is a true black block, as on the panel
-      background: grey(15),
-      foreground: grey(1),
-      cursor: grey(0),
-      cursorAccent: grey(15),
-      // selection inverts: the e-reader highlight idiom
-      selectionBackground: grey(0),
-      selectionForeground: grey(15),
-      selectionInactiveBackground: grey(10),
-      ...Object.fromEntries(ANSI.map(([k, hex]) => [k, toGrey(hex)])),
-      black: grey(0),
-      white: grey(9),
-      brightWhite: grey(3),
-    },
-  },
+  eink: panelTheme(einkFg),
+  kaleido: panelTheme(kaleidoFg),
 };
-let themeName: ThemeName = localStorage.getItem("theme") === "paper" ? "paper" : "eink";
+const saved = localStorage.getItem("theme");
+let themeName: ThemeName = saved === "paper" || saved === "kaleido" ? saved : "eink";
+const isPanel = () => themeName !== "paper";
 const T = () => THEMES[themeName];
 
 const term = new Terminal({
@@ -104,11 +123,13 @@ const term = new Terminal({
 const fit = new FitAddon();
 term.loadAddon(fit);
 const el = document.getElementById("term")!;
+const panel = createPanel(term, document.getElementById("sheet")!);
 
 async function main() {
-  document.documentElement.dataset.theme = themeName;
+  setRootTheme();
   await document.fonts.load(`15px "${T().font}"`);
   term.open(el);
+  panel.enable(isPanel());
   // DOM renderer on purpose: glyphs are real text, so the ink-on-paper
   // shadows are plain CSS. WebKit drops CSS filters on the WebGL canvas layer.
   if (USE_WEBGL) {
@@ -119,7 +140,7 @@ async function main() {
 
   const onData = new Channel<Uint8Array>();
   const dec = new TextDecoder();
-  onData.onmessage = (bytes) => term.write(inkify(dec.decode(new Uint8Array(bytes), { stream: true })));
+  onData.onmessage = (bytes) => panel.write(inkify(dec.decode(new Uint8Array(bytes), { stream: true })));
 
   await invoke("spawn", { cols: term.cols, rows: term.rows, onData });
 
@@ -153,11 +174,16 @@ function watchTrafficLights() {
   invoke("traffic_lights", { visible: false, duration: 0 }); shown = false;
 }
 
-/** Switch between the paper and e-ink looks; persists across launches. */
+const setRootTheme = () => {
+  document.documentElement.dataset.theme = themeName;
+  document.documentElement.toggleAttribute("data-panel", isPanel());
+};
+
+/** Switch between the paper, e-ink and Kaleido looks; persists across launches. */
 async function setTheme(name: ThemeName) {
   themeName = name;
   localStorage.setItem("theme", name);
-  document.documentElement.dataset.theme = name;
+  setRootTheme();
   await document.fonts.load(`15px "${T().font}"`);
   Object.assign(term.options, {
     fontFamily: `"${T().font}", monospace`,
@@ -167,31 +193,22 @@ async function setTheme(name: ThemeName) {
     theme: T().theme,
   });
   fit.fit(); applyRuling();
-  if (name === "eink") refreshPanel();
+  panel.enable(isPanel());
+  panel.fullRefresh();
 }
 
 /**
- * E-ink full refresh: the panel drives every pixel black, then white, then
- * draws the page. No easing anywhere; the particles do not fade, they flip.
- */
-function refreshPanel() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const sheet = document.getElementById("sheet")!;
-  sheet.classList.remove("refresh");
-  void sheet.offsetWidth;   // restart the animation if one is running
-  sheet.classList.add("refresh");
-}
-
-/**
- * Cmd/Ctrl +/-/0 change font size, Cmd/Ctrl+Shift+E toggles e-ink;
- * everything else passes to xterm.
+ * Cmd/Ctrl +/-/0 change font size, Cmd/Ctrl+Shift+E cycles paper -> e-ink -> Kaleido,
+ * Cmd/Ctrl+Shift+L cycles the e-ink front light; everything else passes to xterm.
  */
 function zoomKeys(e: KeyboardEvent): boolean {
   if (e.type !== "keydown" || !(e.metaKey || e.ctrlKey)) return true;
   if (e.shiftKey && e.code === "KeyE") {
-    setTheme(themeName === "eink" ? "paper" : "eink");
+    const order: ThemeName[] = ["paper", "eink", "kaleido"];
+    setTheme(order[(order.indexOf(themeName) + 1) % order.length]);
     return false;
   }
+  if (e.shiftKey && e.code === "KeyL" && isPanel()) { panel.cycleLight(); return false; }
   const step = e.key === "=" || e.key === "+" ? 1 : e.key === "-" ? -1 : e.key === "0" ? 0 : null;
   if (step === null) return true;
   term.options.fontSize = step === 0 ? 15 : Math.min(32, Math.max(9, term.options.fontSize! + step));
@@ -214,8 +231,6 @@ function inkify(chunk: string): string {
   if (tail !== -1 && isPartialEscape(s.slice(tail))) {
     carry = s.slice(tail); s = s.slice(0, tail);
   }
-  // e-ink: clearing the screen is a full panel refresh
-  if (themeName === "eink" && /\x1b\[[23]J|\x1bc/.test(s)) refreshPanel();
   s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) => {
     if (m === "A") ready = true;
     return m === "B" ? `\x1b[38;2;${T().input.join(";")}m` : m === "A" || m === "C" ? RESET_SGR : "";
@@ -244,13 +259,14 @@ function isPartialEscape(t: string): boolean {
 const HIGHLIGHT_BG = "48;2;200;226;245";
 const MAX_FG_LUMA = 0.42;
 function remapSgr(seq: string, params: string): string {
-  const eink = themeName === "eink";
+  const eink = isPanel();
   if (!(eink ? /(^|;)(38|48)(;|$)/ : /(^|;)(7|27|38)(;|$)/).test(params)) return seq;
   const p = params.split(";");
   const out: string[] = [];
   for (let i = 0; i < p.length; i++) {
     const n = p[i];
-    const map = n === "38" ? (eink ? einkFg : inkClamp) : n === "48" && eink ? einkBg : null;
+    const k = themeName === "kaleido";
+    const map = n === "38" ? (k ? kaleidoFg : eink ? einkFg : inkClamp) : n === "48" && eink ? (k ? kaleidoBg : einkBg) : null;
     if (map && p[i + 1] === "2" && i + 4 < p.length) {
       out.push(n, "2", ...map(+p[i + 2], +p[i + 3], +p[i + 4]).map(String)); i += 4;
     } else if (map && p[i + 1] === "5" && i + 2 < p.length) {
@@ -286,7 +302,7 @@ function xterm256(n: number): [number, number, number] | null {
 /** Lock the paper ruling to xterm's actual cell height. */
 function applyRuling() {
   const sheet = document.getElementById("sheet")!;
-  if (themeName !== "paper") { sheet.style.paddingTop = ""; return; }
+  if (isPanel()) { sheet.style.paddingTop = ""; return; }
   // semi-private; isolated here so it is a one-line fix if xterm moves it
   const dims = (term as any)._core?._renderService?.dimensions?.css?.cell;
   if (!dims?.height) return;

@@ -113,6 +113,19 @@ fn traffic_lights(window: tauri::Window, visible: bool, duration: f64) {
     let _ = (window, visible, duration);
 }
 
+/// Battery percent and charging state for the e-ink status bar (macOS: pmset).
+#[tauri::command]
+fn battery() -> Result<(u8, bool), String> {
+    let out = std::process::Command::new("pmset").args(["-g", "batt"]).output().map_err(|e| e.to_string())?;
+    let s = String::from_utf8_lossy(&out.stdout);
+    let pct = s
+        .split('%').next()
+        .and_then(|h| h.rsplit(|c: char| !c.is_ascii_digit()).next())
+        .and_then(|n| n.parse().ok())
+        .ok_or("no battery")?;
+    Ok((pct, s.contains("AC Power")))
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(PtyState::default())
@@ -121,7 +134,7 @@ pub fn run() {
             app.set_menu(tauri::menu::Menu::default(app.handle())?)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![spawn, write, resize, traffic_lights])
+        .invoke_handler(tauri::generate_handler![spawn, write, resize, traffic_lights, battery])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
