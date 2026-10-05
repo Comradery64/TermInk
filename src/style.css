@@ -89,8 +89,8 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
      and a wider faint shadow for the groove the nib leaves */
   filter:
     drop-shadow(0 0 0.35px rgba(28, 42, 96, 0.35))
-    drop-shadow(0.25px 0.4px 0.25px rgba(20, 24, 40, 0.28))
-    drop-shadow(0 0.6px 0.9px rgba(20, 24, 40, 0.10));
+    drop-shadow(0.5px 0.8px 0.3px rgba(20, 24, 40, 0.42))
+    drop-shadow(0 1.2px 1.4px rgba(20, 24, 40, 0.18));
 }
 /* fine fiber tooth over everything so ink is broken by the paper grain */
 #grain {
