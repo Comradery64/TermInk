@@ -2,6 +2,7 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
+import "./fonts.css";
 import { createPanel, PANEL_SECTIONS } from "./eink";
 import { createSettings, CORE, type Values } from "./settings";
 
@@ -69,11 +70,11 @@ const panelTheme = (map: (r: number, g: number, b: number) => RGB) => ({
 });
 const THEMES = { eink: panelTheme(einkFg), kaleido: panelTheme(kaleidoFg) };
 const INPUT_SGR = `\x1b[38;2;${level(0).join(";")}m`;   // typed commands: full black; output one level up
-const settings = createSettings([...CORE, ...PANEL_SECTIONS], "termink.settings", apply);
+const settings = createSettings([...CORE, ...PANEL_SECTIONS], "termink.settings.v2", apply);
 const S = settings.values;
 
 const term = new Terminal({
-  fontFamily: '"Monaspace Xenon", monospace',
+  fontFamily: `"${S.font}", monospace`,
   fontSize: Number(S.fontSize),
   lineHeight: Number(S.lineHeight),
   allowTransparency: true,
@@ -92,6 +93,13 @@ const panel = createPanel(term, document.getElementById("sheet")!, settings.el);
 
 /** Push settings into xterm, the page layout and the panel engine. */
 function apply(v: Values, key?: string) {
+  if (key === "font") {
+    // wait for the face before measuring, or the cell grid is sized for the fallback
+    document.fonts.load(`15px "${v.font}"`).then(() => {
+      term.options.fontFamily = `"${v.font}", monospace`;
+      fit.fit(); panel.fullRefresh();
+    });
+  }
   const reflow = !key || ["fontSize", "lineHeight", "margin", "bezel", "chin", "chinSize", "status", "footer"].includes(key);
   Object.assign(term.options, {
     fontSize: Number(v.fontSize),
@@ -111,7 +119,7 @@ function apply(v: Values, key?: string) {
 
 async function main() {
   apply(S);
-  await document.fonts.load('15px "Monaspace Xenon"');
+  await document.fonts.load(`15px "${S.font}"`);
   // DOM renderer on purpose: glyphs are real text, so the panel's grain,
   // ghosts and refresh flashes are plain CSS over them.
   term.open(el);

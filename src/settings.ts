@@ -8,13 +8,21 @@ type Base = { key: string; label: string; parent?: string };
 export type Field =
   | (Base & { type: "toggle"; default: boolean })
   | (Base & { type: "range"; default: number; min: number; max: number; step: number; unit?: string })
-  | (Base & { type: "select"; default: string; options: [string, string][] });
+  | (Base & { type: "select"; default: string; options: [string, string][] })
+  // options: [css family, label]; each choice is previewed in its own face
+  | (Base & { type: "font"; default: string; options: [string, string][] });
 export type Section = { title: string; fields: Field[] };
 export type Values = Record<string, boolean | number | string>;
 
 /** The fields every terminal app here shares; hosts add their own sections. */
 export const CORE: Section[] = [
   { title: "Text", fields: [
+    { key: "font", label: "Font", type: "font", default: "Monaspace Xenon", options: [
+      ["Monaspace Xenon", "Monaspace Xenon · slab serif"], ["Monaspace Neon", "Monaspace Neon · neo-grotesque"],
+      ["Monaspace Argon", "Monaspace Argon · humanist"], ["Monaspace Krypton", "Monaspace Krypton · mechanical"],
+      ["Monaspace Radon", "Monaspace Radon · handwriting"], ["Victor Mono", "Victor Mono · cursive italics"],
+      ["Maple Mono", "Maple Mono · rounded"],
+    ] },
     { key: "fontSize", label: "Font size", type: "range", default: 15, min: 9, max: 32, step: 1, unit: "px" },
     { key: "lineHeight", label: "Line spacing", type: "range", default: 1.4, min: 1, max: 2, step: 0.05 },
     { key: "cursor", label: "Cursor", type: "select", default: "block",
@@ -58,6 +66,11 @@ export function createSettings(
     if (f.type === "range")
       return `<label class="row range${indent}" data-row="${f.key}"><span>${f.label}</span>`
         + `<input type="range" data-k="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}"><output></output></label>`;
+    if (f.type === "font")
+      return `<div class="row font${indent}" data-row="${f.key}"><span>${f.label}</span><span class="fonts">`
+        + f.options.map(([v, l]) => `<button type="button" data-k="${f.key}" data-v="${v}" style="font-family:'${v}',monospace">`
+          + `<b>${l}</b><i>The quick brown fox · 0Oo 1lI {}#</i></button>`).join("")
+        + `</span></div>`;
     return `<div class="row select${indent}" data-row="${f.key}"><span>${f.label}</span><span class="seg">`
       + f.options.map(([v, l]) => `<button type="button" data-k="${f.key}" data-v="${v}">${l}</button>`).join("")
       + `</span></div>`;
@@ -83,7 +96,9 @@ export function createSettings(
 
   function set(key: string, v: boolean | number | string) {
     values[key] = v;
-    localStorage.setItem(storageKey, JSON.stringify(values));
+    // store only what differs from the defaults, so changed defaults still reach the user
+    const diff = Object.fromEntries(Object.entries(values).filter(([k, x]) => x !== defaults[k]));
+    localStorage.setItem(storageKey, JSON.stringify(diff));
     sync();
     onChange(values, key);
   }

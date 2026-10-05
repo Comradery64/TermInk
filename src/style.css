@@ -13,22 +13,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; }
    A matte, unlit, reflective screen set into a plastic bezel. Every tone is a
    level from the 16-step grey ramp in main.ts. Nothing eases: particles flip
    in steps. Quirks are exaggerated on purpose so they read at arm's length. */
-@font-face {
-  font-family: "Monaspace Xenon";
-  src: url("/fonts/monaspace-xenon-latin-400-normal.woff2") format("woff2");
-  font-weight: 400;
-}
-@font-face {
-  font-family: "Monaspace Xenon";
-  src: url("/fonts/monaspace-xenon-latin-400-italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
-}
-@font-face {
-  font-family: "Monaspace Xenon";
-  src: url("/fonts/monaspace-xenon-latin-700-normal.woff2") format("woff2");
-  font-weight: 700;
-}
 
 .panel-part { display: none; }
 :root {
@@ -163,17 +147,17 @@ html, body { background: var(--bezel); }
 #sheet[data-light="cool"] #front,
 #sheet[data-light="warm"] #front {
   display: block;
-  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  position: absolute; inset: 0; z-index: 8;   /* the light falls on everything on the glass, menus included */ pointer-events: none;
   mix-blend-mode: screen;
   background:
-    radial-gradient(ellipse 14% 22% at 10% 100%, rgba(var(--lc), 0.34), transparent),
-    radial-gradient(ellipse 14% 22% at 30% 100%, rgba(var(--lc), 0.30), transparent),
-    radial-gradient(ellipse 14% 22% at 50% 100%, rgba(var(--lc), 0.34), transparent),
-    radial-gradient(ellipse 14% 22% at 70% 100%, rgba(var(--lc), 0.30), transparent),
-    radial-gradient(ellipse 14% 22% at 90% 100%, rgba(var(--lc), 0.34), transparent),
-    linear-gradient(to top, rgba(var(--lc), 0.20), rgba(var(--lc), 0.08) 55%, rgba(var(--lc), 0.04));
+    radial-gradient(ellipse 14% 22% at 10% 100%, rgba(var(--lc), 0.55), transparent),
+    radial-gradient(ellipse 14% 22% at 30% 100%, rgba(var(--lc), 0.48), transparent),
+    radial-gradient(ellipse 14% 22% at 50% 100%, rgba(var(--lc), 0.55), transparent),
+    radial-gradient(ellipse 14% 22% at 70% 100%, rgba(var(--lc), 0.48), transparent),
+    radial-gradient(ellipse 14% 22% at 90% 100%, rgba(var(--lc), 0.55), transparent),
+    linear-gradient(to top, rgba(var(--lc), 0.34), rgba(var(--lc), 0.16) 55%, rgba(var(--lc), 0.09));
 }
-#sheet[data-light="warm"] { --lc: 255, 178, 96; }
+#sheet[data-light="warm"] { --lc: 255, 160, 70; }
 
 /* ---- status bar and reading progress ---- */
 #status, #footer {
@@ -261,16 +245,19 @@ html, body { background: var(--bezel); }
 :root { --bezel-w: 30px; --chin: 0px; --m: 30px; }
 
 /* ---- settings: an e-reader menu page, flat ink on the panel ---- */
+/* a drawer on the right, so every change shows live on the page beside it */
 #sheet.prefs #settings {
   display: block;
-  position: absolute; inset: 0; z-index: 6;
-  padding: 34px 44px 40px;
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 6;
+  width: min(420px, 62%);
+  box-sizing: border-box;
+  padding: 26px 26px 32px;
   background: var(--page);
   color: var(--ink);
-  font: 400 13px/1.4 "Monaspace Xenon", monospace;
+  border-left: 2px solid var(--ink);
+  font: 400 12.5px/1.4 "Monaspace Xenon", monospace;
   overflow: auto;
 }
-#settings .settings { max-width: 560px; margin: 0 auto; }
 #settings h1 {
   margin: 0 0 18px; padding-bottom: 10px;
   font-size: 20px; font-weight: 700; letter-spacing: 0.08em;
@@ -286,7 +273,7 @@ html, body { background: var(--bezel); }
 #settings .row.child { padding-left: 26px; }
 #settings .row.disabled { opacity: 0.4; cursor: default; }
 #settings .row.range > span, #settings .row.select > span:first-child { flex: 1; }
-#settings output { width: 7em; text-align: right; font-variant-numeric: tabular-nums; }
+#settings output { width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; }
 /* square ink checkbox: empty box, filled solid when on */
 #settings input[type="checkbox"] {
   appearance: none; -webkit-appearance: none; margin: 0;
@@ -297,7 +284,7 @@ html, body { background: var(--bezel); }
 }
 #settings input[type="checkbox"]:checked { background: var(--ink); }
 /* slider: a hairline track and a square ink thumb */
-#settings input[type="range"] { -webkit-appearance: none; appearance: none; width: 180px; height: 14px; background: none; margin: 0; }
+#settings input[type="range"] { -webkit-appearance: none; appearance: none; width: 120px; height: 14px; background: none; margin: 0; }
 #settings input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
 #settings input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; width: 12px; height: 14px; margin-top: -6px;
@@ -313,3 +300,12 @@ html, body { background: var(--bezel); }
 #settings .seg button.on { background: var(--ink); color: var(--page); }
 #settings .reset { border: 1.5px solid var(--ink); margin-top: 6px; }
 #settings .reset:active { background: var(--ink); color: var(--page); }
+
+/* font list: each face previews itself; the chosen one is inverted */
+#settings .row.font { flex-direction: column; align-items: stretch; gap: 6px; padding: 6px 0; cursor: default; }
+#settings .fonts { display: flex; flex-direction: column; border: 1.5px solid var(--ink); }
+#settings .fonts button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 10px; text-align: left; }
+#settings .fonts button + button { border-top: 1px solid rgba(22,22,21,0.35); }
+#settings .fonts b { font-size: 11px; font-weight: 700; }
+#settings .fonts i { font-style: normal; font-size: 13px; }
+#settings .fonts button.on { background: var(--ink); color: var(--page); }

@@ -45,7 +45,7 @@ export const PANEL_SECTIONS: Section[] = [
     { key: "wordmark", label: "Wordmark", type: "toggle", default: true },
   ] },
   { title: "Panel", fields: [
-    { key: "mode", label: "Panel", type: "select", default: "eink", options: [["eink", "Carta grey"], ["kaleido", "Kaleido color"]] },
+    { key: "mode", label: "Panel", type: "select", default: "kaleido", options: [["eink", "Carta grey"], ["kaleido", "Kaleido color"]] },
     { key: "light", label: "Front light", type: "select", default: "off", options: [["off", "Off"], ["cool", "Cool"], ["warm", "Warm"]] },
     { key: "frame", label: "Refresh interval", type: "range", default: 130, min: 16, max: 400, step: 2, unit: " ms" },
     { key: "ghost", label: "Ghosting", type: "range", default: 0.075, min: 0, max: 0.25, step: 0.005 },
