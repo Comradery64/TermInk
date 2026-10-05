@@ -85,9 +85,11 @@ fn install_zsh_integration() -> std::io::Result<std::path::PathBuf> {
     Ok(dir)
 }
 
-/// Fade the macOS close/minimize/zoom buttons in or out.
+/// Fade the macOS titlebar widgets (close/minimize/zoom) in or out.
+/// Animates their container (NSTitlebarView) rather than the buttons: AppKit
+/// resets button alpha on hover/focus changes, which made the fade snap back.
 #[tauri::command]
-fn traffic_lights(window: tauri::Window, visible: bool) {
+fn traffic_lights(window: tauri::Window, visible: bool, duration: f64) {
     #[cfg(target_os = "macos")]
     {
         let w = window.clone();
@@ -95,22 +97,20 @@ fn traffic_lights(window: tauri::Window, visible: bool) {
             use objc2_app_kit::{NSAnimationContext, NSWindow, NSWindowButton};
             let Ok(ptr) = w.ns_window() else { return };
             let ns: &NSWindow = unsafe { &*(ptr as *const NSWindow) };
+            let Some(btn) = ns.standardWindowButton(NSWindowButton::CloseButton) else { return };
+            let Some(bar) = (unsafe { btn.superview() }) else { return };
             let alpha = if visible { 1.0 } else { 0.0 };
             NSAnimationContext::beginGrouping();
-            NSAnimationContext::currentContext().setDuration(0.18);
-            for kind in [NSWindowButton::CloseButton, NSWindowButton::MiniaturizeButton, NSWindowButton::ZoomButton] {
-                if let Some(btn) = ns.standardWindowButton(kind) {
-                    unsafe {
-                        let anim: objc2::rc::Retained<objc2::runtime::AnyObject> = objc2::msg_send![&*btn, animator];
-                        let _: () = objc2::msg_send![&*anim, setAlphaValue: alpha];
-                    }
-                }
+            NSAnimationContext::currentContext().setDuration(duration);
+            unsafe {
+                let anim: objc2::rc::Retained<objc2::runtime::AnyObject> = objc2::msg_send![&*bar, animator];
+                let _: () = objc2::msg_send![&*anim, setAlphaValue: alpha];
             }
             NSAnimationContext::endGrouping();
         });
     }
     #[cfg(not(target_os = "macos"))]
-    let _ = (window, visible);
+    let _ = (window, visible, duration);
 }
 
 pub fn run() {

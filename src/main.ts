@@ -71,11 +71,16 @@ async function main() {
 /** macOS window buttons: hidden until the pointer is over the top strip. */
 function watchTrafficLights() {
   let shown = true;
-  const set = (v: boolean) => { if (v !== shown) { shown = v; invoke("traffic_lights", { visible: v }); } };
+  // appear quickly on entering the top strip; fade out slowly on leaving
+  const set = (v: boolean) => {
+    if (v === shown) return;
+    shown = v;
+    invoke("traffic_lights", { visible: v, duration: v ? 0.15 : 0.9 });
+  };
   const hotZone = () => parseFloat(getComputedStyle(document.getElementById("sheet")!).paddingTop) || 36;
   document.addEventListener("mousemove", (e) => set(e.clientY <= hotZone() + 8));
   document.addEventListener("mouseleave", () => set(false));
-  set(false);
+  invoke("traffic_lights", { visible: false, duration: 0 }); shown = false;
 }
 
 /** Cmd/Ctrl +/-/0 change font size; everything else passes to xterm. */

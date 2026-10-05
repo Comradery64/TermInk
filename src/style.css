@@ -73,13 +73,24 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
 #holes {
   position: absolute;
   left: 24px; top: 0; bottom: 0;
-  display: flex; flex-direction: column; justify-content: space-evenly;
   pointer-events: none;
 }
+/* standard 3-ring spacing: 1.25in, 5.5in, 9.75in on an 11in sheet */
+#holes span:nth-child(1) { top: 11.4%; }
+#holes span:nth-child(2) { top: 50%; }
+#holes span:nth-child(3) { top: 88.6%; }
 #holes span {
-  width: 18px; height: 18px; border-radius: 50%;
+  position: absolute;
+  width: 18px; height: 18px; margin-top: -9px;
+  border-radius: 50%;
   background: var(--hole);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
+  /* punched hole lit from the top-left: shaded inner wall at the top,
+     lit inner wall at the bottom, and a slightly raised paper rim */
+  box-shadow:
+    inset 1px 1.6px 2.2px rgba(20, 24, 40, 0.30),
+    inset -0.6px -0.8px 1px rgba(255, 255, 255, 0.55),
+    0.6px 0.8px 0 rgba(255, 255, 255, 0.75),
+    -0.4px -0.5px 0.4px rgba(20, 24, 40, 0.10);
 }
 
 /* no multiply blend here: it would erase the light rim of the deboss */
