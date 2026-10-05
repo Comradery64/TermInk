@@ -82,7 +82,27 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
   box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
 }
 
-#term { height: 100%; mix-blend-mode: multiply; }
+#term {
+  height: 100%;
+  mix-blend-mode: multiply;
+  /* ink on paper: a soft bleed halo, a hairline shadow pressed down-right,
+     and a wider faint shadow for the groove the nib leaves */
+  filter:
+    drop-shadow(0 0 0.35px rgba(28, 42, 96, 0.35))
+    drop-shadow(0.25px 0.4px 0.25px rgba(20, 24, 40, 0.28))
+    drop-shadow(0 0.6px 0.9px rgba(20, 24, 40, 0.10));
+}
+/* fine fiber tooth over everything so ink is broken by the paper grain */
+#grain {
+  position: absolute; inset: 0;
+  background: url("/paper.png?v=3") 0 0 / 256px 256px;
+  /* inverted to near-black, then screened: lightens ink along fibers,
+     leaves the near-white paper essentially untouched */
+  filter: invert(1) brightness(4);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 2;
+}
 .xterm .xterm-viewport { background: transparent !important; }
 
 /* scrollbar: bare thumb at the window edge, no visible track */
