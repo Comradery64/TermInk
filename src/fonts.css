@@ -1,24 +1,24 @@
-/* Bundled monospace faces (all OFL 1.1). Regular, italic and bold of each. */
-@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-.woff2") format("woff2"); font-weight: 400 normal 400-normal; font-style: ; }
-@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-.woff2") format("woff2"); font-weight: 400 italic 400-italic; font-style: ; }
-@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-.woff2") format("woff2"); font-weight: 700 normal 700-normal; font-style: ; }
-@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-.woff2") format("woff2"); font-weight: 400 normal 400-normal; font-style: ; }
-@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-.woff2") format("woff2"); font-weight: 400 italic 400-italic; font-style: ; }
-@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-.woff2") format("woff2"); font-weight: 700 normal 700-normal; font-style: ; }
-@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-.woff2") format("woff2"); font-weight: 400 normal 400-normal; font-style: ; }
-@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-.woff2") format("woff2"); font-weight: 400 italic 400-italic; font-style: ; }
-@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-.woff2") format("woff2"); font-weight: 700 normal 700-normal; font-style: ; }
-@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-.woff2") format("woff2"); font-weight: 400 normal 400-normal; font-style: ; }
-@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-.woff2") format("woff2"); font-weight: 400 italic 400-italic; font-style: ; }
-@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-.woff2") format("woff2"); font-weight: 700 normal 700-normal; font-style: ; }
-@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-.woff2") format("woff2"); font-weight: 400 normal 400-normal; font-style: ; }
-@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-.woff2") format("woff2"); font-weight: 400 italic 400-italic; font-style: ; }
-@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-.woff2") format("woff2"); font-weight: 700 normal 700-normal; font-style: ; }
-@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-.woff2") format("woff2"); font-weight: 400 normal Regular; font-style: ; }
-@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-.woff2") format("woff2"); font-weight: 400 italic Italic; font-style: ; }
-@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-.woff2") format("woff2"); font-weight: 700 normal Bold; font-style: ; }
-@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-.woff2") format("woff2"); font-weight: 700 italic BoldItalic; font-style: ; }
-@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-.woff2") format("woff2"); font-weight: 400 normal Regular; font-style: ; }
-@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-.woff2") format("woff2"); font-weight: 400 italic Italic; font-style: ; }
-@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-.woff2") format("woff2"); font-weight: 700 normal Bold; font-style: ; }
-@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-.woff2") format("woff2"); font-weight: 700 italic BoldItalic; font-style: ; }
+/* Bundled monospace faces (all OFL 1.1). */
+@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; }
+@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; }

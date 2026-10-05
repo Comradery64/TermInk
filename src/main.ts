@@ -119,7 +119,8 @@ function apply(v: Values, key?: string) {
 
 async function main() {
   apply(S);
-  await document.fonts.load(`15px "${S.font}"`);
+  // a missing font must never stop the shell: fall back and carry on
+  await document.fonts.load(`15px "${S.font}"`).catch((e) => console.warn("font load failed", e));
   // DOM renderer on purpose: glyphs are real text, so the panel's grain,
   // ghosts and refresh flashes are plain CSS over them.
   term.open(el);
