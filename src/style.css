@@ -251,7 +251,7 @@ html, body { background: var(--bezel); }
 /* a drawer on the right, so every change shows live on the page beside it */
 #sheet.prefs #settings {
   display: block;
-  position: absolute; top: 0; right: 0; bottom: 0; z-index: 6;
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 1;   /* on the glass: grain, light and flashes all fall over it */
   width: min(420px, 62%);
   box-sizing: border-box;
   padding: 26px 26px 32px;
@@ -261,57 +261,57 @@ html, body { background: var(--bezel); }
   font: 400 12.5px/1.4 "Monaspace Xenon", monospace;
   overflow: auto;
 }
-#settings h1 {
+:is(#settings, .prefs-ghost) h1 {
   margin: 0 0 18px; padding-bottom: 10px;
   font-size: 20px; font-weight: 700; letter-spacing: 0.08em;
   border-bottom: 2px solid var(--ink);
 }
-#settings h2 {
+:is(#settings, .prefs-ghost) h2 {
   margin: 0; padding: 6px 0;
   font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
   border-bottom: 1px solid rgba(22,22,21,0.35);
 }
-#settings section { margin-bottom: 20px; }
-#settings .row { display: flex; align-items: center; gap: 12px; min-height: 32px; cursor: pointer; }
-#settings .row.child { padding-left: 26px; }
-#settings .row.disabled { opacity: 0.4; cursor: default; }
-#settings .row.range > span, #settings .row.select > span:first-child { flex: 1; }
-#settings output { width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; }
+:is(#settings, .prefs-ghost) section { margin-bottom: 20px; }
+:is(#settings, .prefs-ghost) .row { display: flex; align-items: center; gap: 12px; min-height: 32px; cursor: pointer; }
+:is(#settings, .prefs-ghost) .row.child { padding-left: 26px; }
+:is(#settings, .prefs-ghost) .row.disabled { opacity: 0.4; cursor: default; }
+:is(#settings, .prefs-ghost) .row.range > span, :is(#settings, .prefs-ghost) .row.select > span:first-child { flex: 1; }
+:is(#settings, .prefs-ghost) output { width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; }
 /* square ink checkbox: empty box, filled solid when on */
-#settings input[type="checkbox"] {
+:is(#settings, .prefs-ghost) input[type="checkbox"] {
   appearance: none; -webkit-appearance: none; margin: 0;
   width: 14px; height: 14px;
   border: 1.5px solid var(--ink);
   background: var(--page);
   box-shadow: inset 0 0 0 2px var(--page);
 }
-#settings input[type="checkbox"]:checked { background: var(--ink); }
+:is(#settings, .prefs-ghost) input[type="checkbox"]:checked { background: var(--ink); }
 /* slider: a hairline track and a square ink thumb */
-#settings input[type="range"] { -webkit-appearance: none; appearance: none; width: 120px; height: 14px; background: none; margin: 0; }
-#settings input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
-#settings input[type="range"]::-webkit-slider-thumb {
+:is(#settings, .prefs-ghost) input[type="range"] { -webkit-appearance: none; appearance: none; width: 120px; height: 14px; background: none; margin: 0; }
+:is(#settings, .prefs-ghost) input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
+:is(#settings, .prefs-ghost) input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; width: 12px; height: 14px; margin-top: -6px;
   background: var(--ink); border: 2px solid var(--page); outline: 1px solid var(--ink);
 }
 /* segmented choice: inverted when selected, the reader idiom */
-#settings .seg { display: inline-flex; border: 1.5px solid var(--ink); }
-#settings button {
+:is(#settings, .prefs-ghost) .seg { display: inline-flex; border: 1.5px solid var(--ink); }
+:is(#settings, .prefs-ghost) button {
   font: inherit; color: var(--ink); background: var(--page);
   border: 0; padding: 4px 11px; cursor: pointer;
 }
-#settings .seg button + button { border-left: 1.5px solid var(--ink); }
-#settings .seg button.on { background: var(--ink); color: var(--page); }
-#settings .reset { border: 1.5px solid var(--ink); margin-top: 6px; }
-#settings .reset:active { background: var(--ink); color: var(--page); }
+:is(#settings, .prefs-ghost) .seg button + button { border-left: 1.5px solid var(--ink); }
+:is(#settings, .prefs-ghost) .seg button.on { background: var(--ink); color: var(--page); }
+:is(#settings, .prefs-ghost) .reset { border: 1.5px solid var(--ink); margin-top: 6px; }
+:is(#settings, .prefs-ghost) .reset:active { background: var(--ink); color: var(--page); }
 
 /* font list: each face previews itself; the chosen one is inverted */
-#settings .row.font { flex-direction: column; align-items: stretch; gap: 6px; padding: 6px 0; cursor: default; }
-#settings .fonts { display: flex; flex-direction: column; border: 1.5px solid var(--ink); }
-#settings .fonts button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 10px; text-align: left; }
-#settings .fonts button + button { border-top: 1px solid rgba(22,22,21,0.35); }
-#settings .fonts b { font-size: 11px; font-weight: 700; }
-#settings .fonts i { font-style: normal; font-size: 13px; }
-#settings .fonts button.on { background: var(--ink); color: var(--page); }
+:is(#settings, .prefs-ghost) .row.font { flex-direction: column; align-items: stretch; gap: 6px; padding: 6px 0; cursor: default; }
+:is(#settings, .prefs-ghost) .fonts { display: flex; flex-direction: column; border: 1.5px solid var(--ink); }
+:is(#settings, .prefs-ghost) .fonts button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 10px; text-align: left; }
+:is(#settings, .prefs-ghost) .fonts button + button { border-top: 1px solid rgba(22,22,21,0.35); }
+:is(#settings, .prefs-ghost) .fonts b { font-size: 11px; font-weight: 700; }
+:is(#settings, .prefs-ghost) .fonts i { font-style: normal; font-size: 13px; }
+:is(#settings, .prefs-ghost) .fonts button.on { background: var(--ink); color: var(--page); }
 
 /* ---- line numbers: a quiet column in the left margin ---- */
 #sheet { padding-left: calc(var(--m) + var(--gw, 0px)); }
@@ -341,3 +341,35 @@ html, body { background: var(--bezel); }
 }
 /* overlays on the glass follow its corners (the recess shadow especially) */
 #light, #front, #grain, #sleep, #sheet::after { border-radius: inherit; }
+
+/* ---- the settings drawer is ink on the same panel ---- */
+:is(#settings, .prefs-ghost) .settings { filter: url(#eink-fuzz); }
+:is(#settings, .prefs-ghost) .settings :is(h1, h2, span, b, i, output, button) {
+  text-shadow: 0.7px 1.1px 1.1px rgba(18, 17, 12, 0.30), 0.2px 0.3px 0.3px rgba(18, 17, 12, 0.22);
+}
+:is(#settings, .prefs-ghost) .seg button.on, :is(#settings, .prefs-ghost) .fonts button.on { text-shadow: none; }
+/* drawer is a page-turned list, no smooth scrolling; the bar is a thin square ink mark */
+#settings { scroll-behavior: auto; }
+#settings::-webkit-scrollbar { width: 9px; }
+#settings::-webkit-scrollbar-track { background: transparent; }
+#settings::-webkit-scrollbar-thumb { background: var(--ink); border: 3px solid var(--page); border-radius: 0; }
+/* tap feedback: the touched control inverts for one frame */
+:is(#settings, .prefs-ghost) .row, :is(#settings, .prefs-ghost) button { position: relative; }
+:is(#settings, .prefs-ghost) .tap::after {
+  content: ""; position: absolute; inset: -2px -4px; pointer-events: none;
+  -webkit-backdrop-filter: invert(1); backdrop-filter: invert(1);
+  animation: eink-rect 90ms steps(1, end) forwards;
+}
+/* page turn: the drawer flashes inverted for a frame */
+#settings.turn { animation: drawer-turn 90ms steps(1, end); }
+@keyframes drawer-turn { 0% { filter: invert(1); } 100% { filter: none; } }
+/* ghost of the previous drawer page, fading never: it stays until the next full refresh */
+.prefs-ghost {
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 1;
+  width: min(420px, 62%); box-sizing: border-box;
+  padding: 26px 26px 32px;
+  overflow: hidden; pointer-events: none;
+  color: var(--ink);
+  font: 400 12.5px/1.4 "Monaspace Xenon", monospace;
+  filter: blur(0.35px);
+}

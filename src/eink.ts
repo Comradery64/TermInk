@@ -107,6 +107,35 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   // ---- settings ----
   const prefs = mk("settings");
   prefs.append(prefsPage);
+  // the menu is drawn by the same panel: a tapped control inverts for a frame...
+  prefs.addEventListener("pointerdown", (e) => {
+    const r = (e.target as HTMLElement).closest<HTMLElement>(".row, button");
+    if (!r) return;
+    r.classList.remove("tap"); void r.offsetWidth; r.classList.add("tap");
+  });
+  // ...and the wheel turns its pages, flashing and leaving a ghost, like the terminal
+  let prefsAcc = 0, prefsLock = 0;
+  prefs.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    if (performance.now() < prefsLock) return;
+    prefsAcc += e.deltaY;
+    if (Math.abs(prefsAcc) < 40) return;
+    const dir = Math.sign(prefsAcc); prefsAcc = 0;
+    const max = prefs.scrollHeight - prefs.clientHeight;
+    const to = Math.max(0, Math.min(max, prefs.scrollTop + dir * prefs.clientHeight * 0.85));
+    if (to === prefs.scrollTop) return;
+    prefsLock = performance.now() + 350;
+    sheet.querySelector(".prefs-ghost")?.remove();
+    const g = document.createElement("div");
+    g.className = "prefs-ghost";
+    g.style.opacity = String(GHOST_OPACITY * 1.6);
+    const copy = prefsPage.cloneNode(true) as HTMLElement;
+    copy.style.transform = `translateY(${-prefs.scrollTop}px)`;
+    g.append(copy);
+    sheet.append(g);
+    prefs.scrollTop = to;
+    prefs.classList.remove("turn"); void prefs.offsetWidth; prefs.classList.add("turn");
+  }, { passive: false });
   const BAR_ITEMS: [string, string][] = [
     ["brand", ".brand"], ["title", ".title"], ["cold", ".cold"], ["clock", ".clock"], ["battery", ".batt, .pct"],
     ["page", ".page"], ["track", ".track"], ["percent", ".pctr"],
@@ -134,6 +163,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     fullRefresh();
     setTimeout(() => {
       sheet.classList.toggle("prefs", open);
+      if (!open) sheet.querySelector(".prefs-ghost")?.remove();
       open ? term.blur() : term.focus();
     }, 90);
   }
@@ -312,6 +342,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     // answering a resize) are already on the page, so they must not flash again
     quietUntil = performance.now() + 450;
     screen()?.querySelectorAll(".eink-ghost").forEach((e) => e.remove());
+    sheet.querySelector(".prefs-ghost")?.remove();
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     sheet.classList.remove("refresh");
     void sheet.offsetWidth;
