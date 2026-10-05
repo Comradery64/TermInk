@@ -373,3 +373,6 @@ html, body { background: var(--bezel); }
   font: 400 12.5px/1.4 "Monaspace Xenon", monospace;
   filter: blur(0.35px);
 }
+/* WebKit does not clip filtered/composited children to a rounded parent, so anything
+   reaching the right edge carries the screen's corner radius itself */
+#settings, .prefs-ghost { border-radius: 0 var(--corner, 6px) var(--corner, 6px) 0; }
