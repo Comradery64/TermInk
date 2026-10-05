@@ -29,6 +29,7 @@ export interface Panel {
   enable(on: boolean): void;
   fullRefresh(): void;
   cycleLight(): void;
+  toggleSettings(): void;
 }
 
 export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
@@ -62,6 +63,61 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   bezel.setAttribute("data-tauri-drag-region", "");
   bezel.innerHTML = `<span class="mark">termink</span>`;
 
+  // ---- settings: what the status bar and footer show ----
+  const DEFAULTS = {
+    status: true, brand: true, title: true, cold: true, clock: true, battery: true,
+    footer: false, page: true, track: true, percent: true,
+  };
+  type Key = keyof typeof DEFAULTS;
+  const SECTIONS: [string, Key, [Key, string, string][]][] = [
+    ["Status bar", "status", [
+      ["brand", ".brand", "Name"], ["title", ".title", "Window title"], ["cold", ".cold", "Cold-panel mark"],
+      ["clock", ".clock", "Clock"], ["battery", ".batt, .pct", "Battery"],
+    ]],
+    ["Footer", "footer", [
+      ["page", ".page", "Page number"], ["track", ".track", "Progress line"], ["percent", ".pctr", "Percent"],
+    ]],
+  ];
+  let settings: Record<Key, boolean> = { ...DEFAULTS, ...JSON.parse(localStorage.getItem("settings") ?? "{}") };
+  const prefs = mk("settings");
+  prefs.innerHTML = `<h1>Settings</h1>` + SECTIONS.map(([name, key, items]) =>
+    `<section><label class="head"><input type="checkbox" data-k="${key}"><span>${name}</span></label>`
+    + items.map(([k, , label]) => `<label><input type="checkbox" data-k="${k}"><span>${label}</span></label>`).join("")
+    + `</section>`).join("")
+    + `<p class="keys">Cmd+Shift+L front light · Cmd+Shift+K Kaleido color · Cmd+, close</p>`;
+  prefs.addEventListener("change", (e) => {
+    const k = (e.target as HTMLInputElement).dataset.k as Key;
+    settings[k] = (e.target as HTMLInputElement).checked;
+    localStorage.setItem("settings", JSON.stringify(settings));
+    applySettings();
+  });
+  function applySettings() {
+    for (const [, key, items] of SECTIONS) {
+      const bar = key === "status" ? status : footer;
+      sheet.classList.toggle(`no-${key}`, !settings[key]);
+      for (const [k, sel] of items) {
+        bar.querySelectorAll<HTMLElement>(sel).forEach((e) => e.classList.toggle("off", !settings[k]));
+        const box = prefs.querySelector<HTMLInputElement>(`[data-k="${k}"]`)!;
+        box.checked = settings[k]; box.disabled = !settings[key];
+      }
+      prefs.querySelector<HTMLInputElement>(`[data-k="${key}"]`)!.checked = settings[key];
+    }
+  }
+  // opening and closing a menu is a full refresh on a reader
+  function toggleSettings() {
+    const open = !sheet.classList.contains("prefs");
+    fullRefresh();
+    setTimeout(() => {
+      sheet.classList.toggle("prefs", open);
+      open ? term.blur() : term.focus();
+    }, 90);
+  }
+  addEventListener("keydown", (e) => {
+    if (sheet.classList.contains("prefs") && (e.key === "Escape" || ((e.metaKey || e.ctrlKey) && e.key === ","))) {
+      e.preventDefault(); toggleSettings();
+    }
+  });
+
   term.onTitleChange((t) => { status.querySelector(".title")!.textContent = t; });
 
   // e-ink updates the clock once a minute, never more
@@ -78,7 +134,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
       status.querySelector(".pct")!.textContent = `${pct}%`;
     } catch { status.querySelector(".batt")!.remove(); }
   };
-  tick(); battery();
+  tick(); battery(); applySettings();
   setTimeout(() => { tick(); setInterval(tick, 60_000); }, 60_000 - (Date.now() % 60_000));
   setInterval(battery, 120_000);
 
@@ -110,9 +166,11 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
     const q = queue; queue = "";
     lastFlush = performance.now();
     snapshot = rows().innerHTML;
+    flushBytes = q.length;
     if (q.length > A2_BYTES) a2(true);
     term.write(q);
   }
+  let flushBytes = 0;
 
   function a2(enter: boolean) {
     clearTimeout(a2Timer);
@@ -128,14 +186,28 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
     progress();
     handles();
     const snap = snapshot; snapshot = null;
-    if (snap !== null && end - start + 1 >= term.rows * 0.4) {
-      ghost(snap);
-      if (++large >= FULL_REFRESH_EVERY) { fullRefresh(); return; }
-    }
+    if (snap === null) return;              // cursor/selection repaint: the panel leaves it alone
+    const n = end - start + 1;
+    // Three waveforms, picked the way an e-reader's controller picks them:
+    //  - DU: a keystroke or a prompt line; black/white only, drawn in place, no flash
+    //  - GC partial: a few lines of output; the rows step through grey, no flash
+    //  - GC flashing: most of the screen changed; inverted flash, and the old page ghosts
+    if (n <= 2 && flushBytes < 160) return;
+    if (n < term.rows * 0.4) { settle(start, end); return; }
+    ghost(snap);
+    if (++large >= FULL_REFRESH_EVERY) { fullRefresh(); return; }
     partial(start, end);
   });
 
-  /** Partial update: flash the changed rows inverted for a frame, then step the ink in. */
+  /** Step the ink in through the grey levels, without the inverted flash. */
+  function settle(start: number, end: number, afterFlash = false) {
+    const rs = rows().children;
+    for (let i = start; i <= end; i++) rs[i]?.classList.remove("settle", "late");
+    void rows().offsetWidth;
+    for (let i = start; i <= end; i++) rs[i]?.classList.add("settle", ...(afterFlash ? ["late"] : []));
+  }
+
+  /** Flashing partial update: invert the changed rows for a frame, then step the ink in. */
   function partial(start: number, end: number) {
     const rs = rows().children;
     const first = rs[start] as HTMLElement | undefined, last = rs[end] as HTMLElement | undefined;
@@ -146,9 +218,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
     rect.style.height = `${last.offsetTop + last.offsetHeight - first.offsetTop}px`;
     screen().append(rect);
     rect.addEventListener("animationend", () => rect.remove());
-    for (let i = start; i <= end; i++) rs[i]?.classList.remove("settle");
-    void rows().offsetWidth;
-    for (let i = start; i <= end; i++) rs[i]?.classList.add("settle");
+    settle(start, end, true);
   }
 
   /** The particles that did not fully flip: keep the old screen as a faint shadow. */
@@ -271,5 +341,5 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
     } else progress();
   }
 
-  return { write, enable, fullRefresh, cycleLight };
+  return { write, enable, fullRefresh, cycleLight, toggleSettings };
 }

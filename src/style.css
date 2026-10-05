@@ -89,8 +89,9 @@ html, body { background: var(--bezel); }
   background-size: 2px 2px;
 }
 
-/* ---- refresh: rows settle through grey steps after their inverted flash ---- */
-.xterm-rows > div.settle { animation: eink-settle 210ms steps(1, end) 70ms both; }
+/* ---- refresh: rows settle through grey steps (after the inverted flash, when there is one) ---- */
+.xterm-rows > div.settle { animation: eink-settle 210ms steps(1, end) both; }
+.xterm-rows > div.settle.late { animation-delay: 70ms; }
 @keyframes eink-settle {
   0%   { opacity: 0.25; }
   33%  { opacity: 0.55; }
@@ -249,3 +250,43 @@ html, body { background: var(--bezel); }
 }
 #sleep .name { font: 700 40px/1 "Monaspace Xenon", monospace; letter-spacing: 0.3em; margin-right: -0.3em; }
 #sleep .hint { font: 400 12px/1 "Monaspace Xenon", monospace; letter-spacing: 0.12em; color: var(--ink-3); }
+
+/* ---- bar visibility, from settings ---- */
+#status .off, #footer .off { display: none !important; }
+#status .right { margin-left: auto; }
+#sheet.no-status #status, #sheet.no-footer #footer { display: none; }
+#sheet.no-status { padding-top: 16px; }
+#sheet.no-footer { padding-bottom: 14px; }
+
+/* ---- settings: an e-reader menu page, flat ink on the panel ---- */
+#sheet.prefs #settings {
+  display: block;
+  position: absolute; inset: 0; z-index: 6;
+  padding: 40px 44px;
+  background: var(--page);
+  color: var(--ink);
+  font: 400 13px/1.4 "Monaspace Xenon", monospace;
+  overflow: auto;
+}
+#settings h1 {
+  margin: 0 0 22px; padding-bottom: 10px;
+  font-size: 20px; font-weight: 700; letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--ink);
+}
+#settings section { margin-bottom: 22px; }
+#settings label { display: flex; align-items: center; gap: 12px; padding: 7px 0 7px 26px; cursor: pointer; }
+#settings label.head {
+  padding-left: 0; font-weight: 700; letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(22,22,21,0.35);
+}
+/* square ink checkboxes: an empty box, filled solid when on */
+#settings input {
+  appearance: none; -webkit-appearance: none; margin: 0;
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--ink);
+  background: var(--page);
+  box-shadow: inset 0 0 0 2px var(--page);
+}
+#settings input:checked { background: var(--ink); }
+#settings input:disabled, #settings input:disabled + span { opacity: 0.4; }
+#settings .keys { margin-top: 30px; font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }

@@ -143,12 +143,14 @@ function toggleKaleido() {
 
 /**
  * Cmd/Ctrl +/-/0 change font size, Cmd/Ctrl+Shift+K toggles Kaleido color,
- * Cmd/Ctrl+Shift+L cycles the front light; everything else passes to xterm.
+ * Cmd/Ctrl+Shift+L cycles the front light, Cmd/Ctrl+, opens settings;
+ * everything else passes to xterm.
  */
 function keys(e: KeyboardEvent): boolean {
   if (e.type !== "keydown" || !(e.metaKey || e.ctrlKey)) return true;
   if (e.shiftKey && e.code === "KeyK") { toggleKaleido(); return false; }
   if (e.shiftKey && e.code === "KeyL") { panel.cycleLight(); return false; }
+  if (!e.shiftKey && e.key === ",") { panel.toggleSettings(); return false; }
   const step = e.key === "=" || e.key === "+" ? 1 : e.key === "-" ? -1 : e.key === "0" ? 0 : null;
   if (step === null) return true;
   term.options.fontSize = step === 0 ? 15 : Math.min(32, Math.max(9, term.options.fontSize! + step));
