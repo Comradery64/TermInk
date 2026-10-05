@@ -53,7 +53,7 @@ html, body { background: var(--bezel); }
 /* ---- the screen, recessed into the bezel ---- */
 #sheet {
   position: absolute;
-  inset: var(--bezel-w) var(--bezel-w) calc(var(--bezel-w) + var(--chin)) var(--bezel-w);
+  inset: calc(var(--bezel-w) + var(--bezel-top, 0px)) var(--bezel-w) calc(var(--bezel-w) + var(--chin)) var(--bezel-w);
   height: auto;
   z-index: 1;
   padding: var(--m);

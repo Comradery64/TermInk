@@ -40,6 +40,7 @@ export const PANEL_SECTIONS: Section[] = [
   ] },
   { title: "Bezel", fields: [
     { key: "bezel", label: "Bezel width", type: "range", default: 30, min: 0, max: 80, step: 2, unit: "px" },
+    { key: "bezelTop", label: "Top bezel extra", type: "range", default: 0, min: 0, max: 60, step: 1, unit: "px" },
     { key: "chin", label: "Chin", type: "toggle", default: false },
     { key: "chinSize", label: "Chin size", type: "range", default: 40, min: 8, max: 120, step: 2, unit: "px", parent: "chin" },
     { key: "wordmark", label: "Wordmark", type: "toggle", default: true },
@@ -169,6 +170,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     const root = document.documentElement.style;
     root.setProperty("--bezel-w", `${v.bezel}px`);
     root.setProperty("--chin", v.chin ? `${v.chinSize}px` : "0px");
+    root.setProperty("--bezel-top", `${v.bezelTop}px`);
     root.setProperty("--corner", `${Math.min(17, Number(v.corner))}px`);   // clamp older saved values
     frame.classList.toggle("no-mark", !v.wordmark);
     requestAnimationFrame(cut);   // bezel width or corner radius may have moved the window
