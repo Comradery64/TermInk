@@ -71,14 +71,16 @@ async function main() {
 /** macOS window buttons: hidden until the pointer is over the top strip. */
 function watchTrafficLights() {
   let shown = true;
-  // appear quickly on entering the top strip; fade out slowly on leaving
+  // appear when the pointer is in the corner where the buttons live
+  // (top-left on macOS), within 15% of the window's width and height
+  const ZONE = 0.15;
   const set = (v: boolean) => {
     if (v === shown) return;
     shown = v;
-    invoke("traffic_lights", { visible: v, duration: v ? 0.15 : 0.9 });
+    invoke("traffic_lights", { visible: v, duration: v ? 0.25 : 0.45 });
   };
-  const hotZone = () => parseFloat(getComputedStyle(document.getElementById("sheet")!).paddingTop) || 36;
-  document.addEventListener("mousemove", (e) => set(e.clientY <= hotZone() + 8));
+  const inZone = (e: MouseEvent) => e.clientX <= innerWidth * ZONE && e.clientY <= innerHeight * ZONE;
+  document.addEventListener("mousemove", (e) => set(inZone(e)));
   document.addEventListener("mouseleave", () => set(false));
   invoke("traffic_lights", { visible: false, duration: 0 }); shown = false;
 }
