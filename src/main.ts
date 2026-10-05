@@ -78,9 +78,11 @@ const CODE: Section[] = [
       options: [["off", "Off"], ["absolute", "Absolute"], ["relative", "Relative"]] },
   ] },
   { title: "Syntax highlighting", fields: [
-    { key: "hlCommands", label: "Typed commands", type: "toggle", default: true },
     { key: "hlOutput", label: "Command output", type: "toggle", default: true },
-    ...TOKENS.map(([t, label, color]) => ({ key: `color.${t}`, label, type: "color" as const, default: color })),
+    { key: "hlCommands", label: "Typed commands", type: "toggle", default: false },
+    // off: tokens are marked by weight and style alone, in plain ink
+    { key: "hlColor", label: "Color tokens", type: "toggle", default: false },
+    ...TOKENS.map(([t, label, color]) => ({ key: `color.${t}`, label, type: "color" as const, default: color, parent: "hlColor" })),
   ] },
 ];
 const settings = createSettings([...CORE, ...CODE, ...PANEL_SECTIONS], "termink.settings.v2", apply);
@@ -110,7 +112,7 @@ const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
 const highlight = createSyntax(() => ({
   commands: !!S.hlCommands,
   output: !!S.hlOutput,
-  color: (t: Token) => hex(String(S[`color.${t}`])),
+  color: (t: Token) => (S.hlColor ? hex(String(S[`color.${t}`])) : null),
   inputSgr: INPUT_SGR,
 }));
 

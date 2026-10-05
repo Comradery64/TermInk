@@ -20,12 +20,12 @@ export const TOKENS: [Token, string, string][] = [   // key, label, default colo
   ["error", "Errors", "#cf222e"],
   ["warning", "Warnings", "#9a6700"],
 ];
-const STYLE: Partial<Record<Token, string>> = { command: "1", error: "1", string: "3", url: "4", warning: "1" };
+const STYLE: Partial<Record<Token, string>> = { command: "1", error: "1", string: "3", path: "3", url: "4", warning: "1" };
 
 export interface SyntaxOptions {
   commands: boolean;
   output: boolean;
-  color(t: Token): [number, number, number];   // already mapped to the panel
+  color(t: Token): [number, number, number] | null;   // null: style only, keep the ink
   inputSgr: string;                              // SGR the host uses for typed text
 }
 
@@ -47,8 +47,9 @@ export function createSyntax(opts: () => SyntaxOptions) {
   let cmdPos = true, inFlag = false, wordStart = true, inWord = false, quote = "";
 
   const sgr = (t: Token) => {
-    const [r, g, b] = opts().color(t);
-    return `\x1b[${STYLE[t] ? STYLE[t] + ";" : ""}38;2;${r};${g};${b}m`;
+    const c = opts().color(t);
+    const parts = [STYLE[t], c && `38;2;${c.join(";")}`].filter(Boolean);
+    return parts.length ? `\x1b[${parts.join(";")}m` : "";
   };
   // undo a token's style and return to whatever color the text had before it
   const after = (t: Token) => `\x1b[${{ "1": "22;", "3": "23;", "4": "24;" }[STYLE[t] ?? ""] ?? ""}${input ? opts().inputSgr.slice(2, -1) : "39"}m`;
