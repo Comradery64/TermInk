@@ -6,7 +6,7 @@ import "@xterm/xterm/css/xterm.css";
 
 const USE_WEBGL = false;
 const INK = "rgba(28, 42, 96, 0.88)";       // fountain-pen blue
-const GRAPHITE = "rgba(40, 40, 48, 0.82)";
+const GRAPHITE = "rgba(36, 38, 46, 0.94)";  // system text: prompt + output
 
 const term = new Terminal({
   fontFamily: '"Monaspace Radon", monospace',
@@ -97,7 +97,7 @@ function zoomKeys(e: KeyboardEvent): boolean {
 
 /**
  * Turn OSC 133 shell-integration marks into ink colors:
- * A (prompt start) -> blue ink, C (output start) -> graphite.
+ * A (prompt start) -> graphite, B (command input) -> blue ink, C (output start) -> graphite.
  * A sequence may be split across chunks, so hold back a trailing partial ESC.
  */
 const INK_SGR = "\x1b[38;2;28;42;96m";
@@ -113,7 +113,7 @@ function inkify(chunk: string): string {
   }
   s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) => {
     if (m === "A") ready = true;
-    return m === "A" ? INK_SGR : m === "C" ? RESET_SGR : "";
+    return m === "B" ? INK_SGR : m === "A" || m === "C" ? RESET_SGR : "";
   });
   return s.replace(/\x1b\[([0-9;]*)m/g, remapSgr);
 }
