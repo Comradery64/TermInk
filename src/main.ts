@@ -123,8 +123,10 @@ function applyRuling() {
   const sheet = document.getElementById("sheet")!;
   // whole pixels only: a half-pixel offset anti-aliases the 1px rules to grey
   const cell = Math.round(dims.height);
-  // exactly one empty ruled line above the first text row
-  sheet.style.paddingTop = `${cell}px`;
+  // 1.5 rows of space above the text; the header strip hides the top rule,
+  // so the first visible rule is the one under the single empty line.
+  sheet.style.paddingTop = `${Math.round(cell * 1.5)}px`;
+  sheet.style.setProperty("--cover", `${cell}px`);
   const top = Math.round(el.getBoundingClientRect().top - sheet.getBoundingClientRect().top);
   sheet.style.setProperty("--rule", `${cell}px`);
   sheet.style.setProperty("--rule-offset", `${top + cell - 1}px`);

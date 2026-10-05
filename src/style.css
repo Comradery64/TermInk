@@ -54,16 +54,15 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
   opacity: 0.9;
 }
 
+/* blank paper strip over the top rule; also the window drag region */
 #header {
   position: absolute;
-  top: 12px; right: 24px; left: 0;
-  height: 24px;
-  text-align: right;
-  font: 600 11px/24px "Monaspace Radon", monospace;
-  letter-spacing: 0.25em;
-  color: #9aa3b5;
+  top: 0; right: 0; left: 0;
+  height: var(--cover, 24px);
+  background: var(--paper);
   user-select: none;
 }
+#sheet::before, #holes, #term { z-index: 1; }
 
 #holes {
   position: absolute;
