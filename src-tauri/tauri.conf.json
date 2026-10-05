@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "TermPaper",
+  "version": "0.1.0",
+  "identifier": "dev.reishi.termpaper",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "TermPaper",
+        "width": 960,
+        "height": 640,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
+      }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": false }
+}
