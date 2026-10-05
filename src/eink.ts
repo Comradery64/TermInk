@@ -1,6 +1,5 @@
 import type { Terminal } from "@xterm/xterm";
 import { invoke } from "@tauri-apps/api/core";
-import "./eink.css";
 
 /**
  * The e-ink panel: everything that makes the screen behave like electrophoretic
@@ -44,11 +43,11 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   let sleepTimer = 0;
 
   const screen = () => sheet.querySelector<HTMLElement>(".xterm-screen")!;
-  const rows = () => sheet.querySelector<HTMLElement>(".xterm-rows")!;
+  const rows = () => sheet.querySelector<HTMLElement>(".xterm-rows:not(.eink-ghost)")!;
 
   // ---- chrome: overlays, status bar, footer, sleep screen, bezel ----
   const mk = (id: string, parent: HTMLElement = sheet, tag = "div") => {
-    const e = document.createElement(tag); e.id = id; e.className = "eink-only"; parent.append(e); return e;
+    const e = document.createElement(tag); e.id = id; e.className = "panel-part"; parent.append(e); return e;
   };
   mk("light"); mk("grid"); mk("front");
   const status = mk("status");
@@ -155,7 +154,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   /** The particles that did not fully flip: keep the old screen as a faint shadow. */
   function ghost(html: string) {
     const g = document.createElement("div");
-    g.className = "eink-ghost";
+    g.className = "xterm-rows eink-ghost";   // xterm-rows: inherit the renderer's font and color rules
     g.innerHTML = html;
     screen().prepend(g);
     const all = screen().querySelectorAll<HTMLElement>(".eink-ghost");

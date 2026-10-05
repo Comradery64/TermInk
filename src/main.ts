@@ -1,13 +1,9 @@
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
 import { createPanel } from "./eink";
 
-const USE_WEBGL = false;
-const INK = "rgba(28, 42, 96, 0.88)";       // fountain-pen blue
-const GRAPHITE = "rgba(36, 38, 46, 0.94)";  // system text: prompt + output
 
 /**
  * E-ink: a 4-bit greyscale panel (16 levels, as on Carta displays), lerped
@@ -53,71 +49,37 @@ const panelAnsi = (map: (r: number, g: number, b: number) => RGB) => Object.from
   return [k, `rgb(${map(r, g, b).join(",")})`];
 }));
 
-type ThemeName = "paper" | "eink" | "kaleido";
+
+type Mode = "eink" | "kaleido";
 const panelTheme = (map: (r: number, g: number, b: number) => RGB) => ({
-  font: "Monaspace Xenon",
-  lineHeight: 1.4,
-  // the panel cannot blink without a refresh flicker; readers show a steady block
-  cursorBlink: false,
-  cursorStyle: "block" as const,
-  input: level(0),              // typed commands: full black; output one level up
-  theme: {
-    // opaque, so SGR 7 inverse is a true black block, as on the panel
-    background: grey(15),
-    foreground: grey(1),
-    cursor: grey(0),
-    cursorAccent: grey(15),
-    // selection inverts: the e-reader highlight idiom
-    selectionBackground: grey(0),
-    selectionForeground: grey(15),
-    selectionInactiveBackground: grey(10),
-    ...panelAnsi(map),
-    black: grey(0),
-    white: grey(9),
-    brightWhite: grey(3),
-  },
+  // opaque, so SGR 7 inverse is a true black block, as on the panel
+  background: grey(15),
+  foreground: grey(1),
+  cursor: grey(0),
+  cursorAccent: grey(15),
+  // selection inverts: the e-reader highlight idiom
+  selectionBackground: grey(0),
+  selectionForeground: grey(15),
+  selectionInactiveBackground: grey(10),
+  ...panelAnsi(map),
+  black: grey(0),
+  white: grey(9),
+  brightWhite: grey(3),
 });
-const THEMES = {
-  paper: {
-    font: "Monaspace Radon",
-    lineHeight: 1.6,
-    cursorBlink: true,
-    cursorStyle: "bar" as const,
-    input: [28, 42, 96] as RGB,   // typed commands: blue ink
-    theme: {
-      background: "rgba(0,0,0,0)",
-      foreground: GRAPHITE,
-      cursor: INK,
-      selectionBackground: "#c8e2f5",
-      selectionInactiveBackground: "#dde9f3",
-      // ink palette for a light page: every color dark enough to read on paper
-      black: GRAPHITE,        brightBlack: "#5a5e6a",
-      red: "#b3261e",         brightRed: "#c62828",
-      green: "#2e7d32",       brightGreen: "#1b7f3b",
-      yellow: "#8a6d00",      brightYellow: "#946f00",
-      blue: INK,              brightBlue: INK,
-      magenta: "#7b3f8c",     brightMagenta: "#8e3f9e",
-      cyan: "#0e6e7c",        brightCyan: "#0f7f90",
-      white: "#6b6f7b",       brightWhite: "#3a3d47",
-    },
-  },
-  eink: panelTheme(einkFg),
-  kaleido: panelTheme(kaleidoFg),
-};
-const saved = localStorage.getItem("theme");
-let themeName: ThemeName = saved === "paper" || saved === "kaleido" ? saved : "eink";
-const isPanel = () => themeName !== "paper";
-const T = () => THEMES[themeName];
+const THEMES = { eink: panelTheme(einkFg), kaleido: panelTheme(kaleidoFg) };
+const INPUT_SGR = `\x1b[38;2;${level(0).join(";")}m`;   // typed commands: full black; output one level up
+let mode: Mode = localStorage.getItem("mode") === "kaleido" ? "kaleido" : "eink";
 
 const term = new Terminal({
-  fontFamily: `"${T().font}", monospace`,
+  fontFamily: '"Monaspace Xenon", monospace',
   fontSize: 15,
-  lineHeight: T().lineHeight,
+  lineHeight: 1.4,
   allowTransparency: true,
-  cursorBlink: T().cursorBlink,
-  cursorStyle: T().cursorStyle,
+  // the panel cannot blink without a refresh flicker; readers show a steady block
+  cursorBlink: false,
+  cursorStyle: "block",
   scrollback: 5000,
-  theme: T().theme,
+  theme: THEMES[mode],
 });
 
 const fit = new FitAddon();
@@ -126,17 +88,13 @@ const el = document.getElementById("term")!;
 const panel = createPanel(term, document.getElementById("sheet")!);
 
 async function main() {
-  setRootTheme();
-  await document.fonts.load(`15px "${T().font}"`);
+  document.documentElement.dataset.mode = mode;
+  await document.fonts.load('15px "Monaspace Xenon"');
+  // DOM renderer on purpose: glyphs are real text, so the panel's grain,
+  // ghosts and refresh flashes are plain CSS over them.
   term.open(el);
-  panel.enable(isPanel());
-  // DOM renderer on purpose: glyphs are real text, so the ink-on-paper
-  // shadows are plain CSS. WebKit drops CSS filters on the WebGL canvas layer.
-  if (USE_WEBGL) {
-    try { term.loadAddon(new WebglAddon()); } catch (e) { console.warn("WebGL unavailable", e); }
-  }
+  panel.enable(true);
   fit.fit();
-  applyRuling();
 
   const onData = new Channel<Uint8Array>();
   const dec = new TextDecoder();
@@ -151,8 +109,8 @@ async function main() {
   term.onData((s) => { if (ready) invoke("write", { data: Array.from(enc.encode(s)) }); });
   term.onResize(({ cols, rows }) => invoke("resize", { cols, rows }));
 
-  new ResizeObserver(() => { fit.fit(); applyRuling(); }).observe(el);
-  term.attachCustomKeyEventHandler(zoomKeys);
+  new ResizeObserver(() => fit.fit()).observe(el);
+  term.attachCustomKeyEventHandler(keys);
   term.focus();
   watchTrafficLights();
 }
@@ -174,51 +132,33 @@ function watchTrafficLights() {
   invoke("traffic_lights", { visible: false, duration: 0 }); shown = false;
 }
 
-const setRootTheme = () => {
-  document.documentElement.dataset.theme = themeName;
-  document.documentElement.toggleAttribute("data-panel", isPanel());
-};
-
-/** Switch between the paper, e-ink and Kaleido looks; persists across launches. */
-async function setTheme(name: ThemeName) {
-  themeName = name;
-  localStorage.setItem("theme", name);
-  setRootTheme();
-  await document.fonts.load(`15px "${T().font}"`);
-  Object.assign(term.options, {
-    fontFamily: `"${T().font}", monospace`,
-    lineHeight: T().lineHeight,
-    cursorBlink: T().cursorBlink,
-    cursorStyle: T().cursorStyle,
-    theme: T().theme,
-  });
-  fit.fit(); applyRuling();
-  panel.enable(isPanel());
+/** Switch between the greyscale panel and the Kaleido color panel; persists. */
+function toggleKaleido() {
+  mode = mode === "eink" ? "kaleido" : "eink";
+  localStorage.setItem("mode", mode);
+  document.documentElement.dataset.mode = mode;
+  term.options.theme = THEMES[mode];
   panel.fullRefresh();
 }
 
 /**
- * Cmd/Ctrl +/-/0 change font size, Cmd/Ctrl+Shift+E cycles paper -> e-ink -> Kaleido,
- * Cmd/Ctrl+Shift+L cycles the e-ink front light; everything else passes to xterm.
+ * Cmd/Ctrl +/-/0 change font size, Cmd/Ctrl+Shift+K toggles Kaleido color,
+ * Cmd/Ctrl+Shift+L cycles the front light; everything else passes to xterm.
  */
-function zoomKeys(e: KeyboardEvent): boolean {
+function keys(e: KeyboardEvent): boolean {
   if (e.type !== "keydown" || !(e.metaKey || e.ctrlKey)) return true;
-  if (e.shiftKey && e.code === "KeyE") {
-    const order: ThemeName[] = ["paper", "eink", "kaleido"];
-    setTheme(order[(order.indexOf(themeName) + 1) % order.length]);
-    return false;
-  }
-  if (e.shiftKey && e.code === "KeyL" && isPanel()) { panel.cycleLight(); return false; }
+  if (e.shiftKey && e.code === "KeyK") { toggleKaleido(); return false; }
+  if (e.shiftKey && e.code === "KeyL") { panel.cycleLight(); return false; }
   const step = e.key === "=" || e.key === "+" ? 1 : e.key === "-" ? -1 : e.key === "0" ? 0 : null;
   if (step === null) return true;
   term.options.fontSize = step === 0 ? 15 : Math.min(32, Math.max(9, term.options.fontSize! + step));
-  fit.fit(); applyRuling();
+  fit.fit();
   return false;
 }
 
 /**
- * Turn OSC 133 shell-integration marks into ink colors:
- * A (prompt start) -> system text, B (command input) -> input ink, C (output start) -> system text.
+ * Turn OSC 133 shell-integration marks into ink levels:
+ * A (prompt start) -> system text, B (command input) -> full black, C (output start) -> system text.
  * A sequence may be split across chunks, so hold back a trailing partial ESC.
  */
 const RESET_SGR = "\x1b[39m";
@@ -233,7 +173,7 @@ function inkify(chunk: string): string {
   }
   s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) => {
     if (m === "A") ready = true;
-    return m === "B" ? `\x1b[38;2;${T().input.join(";")}m` : m === "A" || m === "C" ? RESET_SGR : "";
+    return m === "B" ? INPUT_SGR : m === "A" || m === "C" ? RESET_SGR : "";
   });
   return s.replace(/\x1b\[([0-9;]*)m/g, remapSgr);
 }
@@ -247,74 +187,38 @@ function isPartialEscape(t: string): boolean {
 }
 
 /**
- * Rewrite SGR sequences for a light page:
- *  - 7/27 (inverse), paper only: the canvas background is transparent, so inverse
- *    would paint letters transparent and the cell in ink. Use a highlighter instead.
- *    E-ink has an opaque page, so it keeps the true inverse block.
- *  - 38;5;n and 38;2;r;g;b foregrounds: apps pick these for dark terminals;
- *    paper clamps their luminance so pale yellows/cyans stay legible,
- *    e-ink quantizes them to the panel's grey levels.
- *  - 48 backgrounds, e-ink only: quantized into the light half of the levels.
+ * Rewrite 256-color and truecolor SGR for the panel: apps pick these for dark
+ * terminals, so foregrounds are quantized to the dark grey levels and
+ * backgrounds into the light half. Underline colors (58) pass through.
  */
-const HIGHLIGHT_BG = "48;2;200;226;245";
-const MAX_FG_LUMA = 0.42;
 function remapSgr(seq: string, params: string): string {
-  const eink = isPanel();
-  if (!(eink ? /(^|;)(38|48)(;|$)/ : /(^|;)(7|27|38)(;|$)/).test(params)) return seq;
+  if (!/(^|;)(38|48)(;|$)/.test(params)) return seq;
+  const k = mode === "kaleido";
   const p = params.split(";");
   const out: string[] = [];
   for (let i = 0; i < p.length; i++) {
     const n = p[i];
-    const k = themeName === "kaleido";
-    const map = n === "38" ? (k ? kaleidoFg : eink ? einkFg : inkClamp) : n === "48" && eink ? (k ? kaleidoBg : einkBg) : null;
+    const map = n === "38" ? (k ? kaleidoFg : einkFg) : n === "48" ? (k ? kaleidoBg : einkBg) : null;
     if (map && p[i + 1] === "2" && i + 4 < p.length) {
       out.push(n, "2", ...map(+p[i + 2], +p[i + 3], +p[i + 4]).map(String)); i += 4;
     } else if (map && p[i + 1] === "5" && i + 2 < p.length) {
       const rgb = xterm256(+p[i + 2]);
       if (rgb) out.push(n, "2", ...map(...rgb).map(String)); else out.push(n, "5", p[i + 2]);
       i += 2;
-    } else if ((n === "48" || n === "58") && (p[i + 1] === "2" || p[i + 1] === "5")) {
-      const len = p[i + 1] === "2" ? 5 : 3;      // keep background/underline runs intact
+    } else if (n === "58" && (p[i + 1] === "2" || p[i + 1] === "5")) {
+      const len = p[i + 1] === "2" ? 5 : 3;      // keep underline-color runs intact
       out.push(...p.slice(i, i + len)); i += len - 1;
-    } else if (n === "7" && !eink) out.push(HIGHLIGHT_BG);
-    else if (n === "27" && !eink) out.push("49");
-    else out.push(n);
+    } else out.push(n);
   }
   return `\x1b[${out.join(";")}m`;
 }
 
-/** Darken an RGB foreground until its luminance is at most MAX_FG_LUMA. */
-function inkClamp(r: number, g: number, b: number): [number, number, number] {
-  const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  if (luma <= MAX_FG_LUMA) return [r, g, b];
-  const k = MAX_FG_LUMA / luma;
-  return [Math.round(r * k), Math.round(g * k), Math.round(b * k)];
-}
-
 /** RGB for xterm 256-color indices 16..255; null for 0..15 (theme handles those). */
-function xterm256(n: number): [number, number, number] | null {
+function xterm256(n: number): RGB | null {
   if (n < 16 || n > 255 || Number.isNaN(n)) return null;
   if (n >= 232) { const v = 8 + (n - 232) * 10; return [v, v, v]; }
   const c = n - 16, lv = [0, 95, 135, 175, 215, 255];
   return [lv[Math.floor(c / 36)], lv[Math.floor(c / 6) % 6], lv[c % 6]];
-}
-
-/** Lock the paper ruling to xterm's actual cell height. */
-function applyRuling() {
-  const sheet = document.getElementById("sheet")!;
-  if (isPanel()) { sheet.style.paddingTop = ""; return; }
-  // semi-private; isolated here so it is a one-line fix if xterm moves it
-  const dims = (term as any)._core?._renderService?.dimensions?.css?.cell;
-  if (!dims?.height) return;
-  // whole pixels only: a half-pixel offset anti-aliases the 1px rules to grey
-  const cell = Math.round(dims.height);
-  // 1.5 rows of space above the text; the header strip hides the top rule,
-  // so the first visible rule is the one under the single empty line.
-  sheet.style.paddingTop = `${Math.round(cell * 1.5)}px`;
-  sheet.style.setProperty("--cover", `${cell}px`);
-  const top = Math.round(el.getBoundingClientRect().top - sheet.getBoundingClientRect().top);
-  sheet.style.setProperty("--rule", `${cell}px`);
-  sheet.style.setProperty("--rule-offset", `${top + cell - 1}px`);
 }
 
 main();

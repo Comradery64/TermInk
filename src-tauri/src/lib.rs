@@ -24,11 +24,11 @@ fn spawn(state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>
     });
     let mut cmd = CommandBuilder::new(&shell);
     cmd.env("TERM", "xterm-256color");
-    cmd.env("TERM_PROGRAM", "TermPaper");
+    cmd.env("TERM_PROGRAM", "TermInk");
     if shell.ends_with("zsh") {
         if let Ok(dir) = install_zsh_integration() {
             if let Some(user) = std::env::var_os("ZDOTDIR") {
-                cmd.env("TERMPAPER_USER_ZDOTDIR", user);
+                cmd.env("TERMINK_USER_ZDOTDIR", user);
             }
             cmd.env("ZDOTDIR", dir);
         }
@@ -78,7 +78,7 @@ fn resize(state: State<PtyState>, cols: u16, rows: u16) -> Result<(), String> {
 
 /// Write the bundled zsh shim to a per-user dir and return it for ZDOTDIR.
 fn install_zsh_integration() -> std::io::Result<std::path::PathBuf> {
-    let dir = std::env::temp_dir().join("termpaper-zsh");
+    let dir = std::env::temp_dir().join("termink-zsh");
     std::fs::create_dir_all(&dir)?;
     std::fs::write(dir.join(".zshenv"), include_str!("../shell/zsh/.zshenv"))?;
     std::fs::write(dir.join(".zshrc"), include_str!("../shell/zsh/.zshrc"))?;
