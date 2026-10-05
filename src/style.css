@@ -27,15 +27,19 @@ html, body { margin: 0; height: 100%; overflow: hidden; }
 
 /* ---- bezel: matte plastic, deeper chin with the wordmark ---- */
 html, body { background: var(--bezel); }
-#bezel {
+/* #bezel: under the glass, the window's drag handle. #frame: the same plastic drawn over
+   the glass with a cut-out (eink.ts); it never takes the mouse, so scrolling and
+   selection pass straight through to the screen. */
+#frame { z-index: 10; pointer-events: none; }
+#bezel, #frame {
   display: block;
-  position: fixed; inset: 0; z-index: 10;   /* above the glass; the screen shows through a cut-out (eink.ts) */
+  position: fixed; inset: 0;
   background:
     linear-gradient(to bottom, rgba(255,255,255,0.05), transparent 30%, rgba(0,0,0,0.12)),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
     var(--bezel);
 }
-#bezel .mark {
+#frame .mark {
   position: absolute; left: 0; right: 0; bottom: calc((var(--bezel-w) + var(--chin)) / 2 - 5px);
   text-align: center;
   font: 600 11px/1 "Monaspace Xenon", monospace;
@@ -244,7 +248,7 @@ html, body { background: var(--bezel); }
 #sheet.no-status #status, #sheet.no-footer #footer { display: none; }
 #sheet:not(.no-status) { padding-top: calc(24px + var(--m)); }
 #sheet:not(.no-footer) { padding-bottom: calc(24px + var(--m)); }
-#bezel.no-mark .mark { display: none; }
+#frame.no-mark .mark { display: none; }
 :root { --bezel-w: 30px; --chin: 0px; --m: 30px; }
 
 /* ---- settings: an e-reader menu page, flat ink on the panel ---- */
