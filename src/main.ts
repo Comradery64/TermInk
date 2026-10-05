@@ -166,7 +166,7 @@ async function main() {
   // or 2s have passed for shells without the integration
   setTimeout(() => (ready = true), 2000);
   const enc = new TextEncoder();
-  term.onData((s) => { if (ready) invoke("write", { data: Array.from(enc.encode(s)) }); });
+  term.onData((s) => { panel.noteInput(s); if (ready) invoke("write", { data: Array.from(enc.encode(s)) }); });
   term.onResize(({ cols, rows }) => invoke("resize", { cols, rows }));
 
   new ResizeObserver(() => fit.fit()).observe(el);

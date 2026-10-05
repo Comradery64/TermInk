@@ -59,6 +59,7 @@ export interface Panel {
   enable(on: boolean): void;
   fullRefresh(): void;
   configure(v: Values): void;
+  noteInput(data: string): void;
   toggleSettings(): void;
 }
 
@@ -170,7 +171,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   // ---- drawing at the panel's frame rate ----
   function write(s: string) {
     if (!on) { term.write(s); return; }
-    if (/\x1b\[[23]J|\x1bc/.test(s)) queueMicrotask(fullRefresh);   // clear = full refresh
+    if (/\x1b\[[23]J|\x1bc/.test(s)) sawClear = true;   // clear = full refresh, once things are quiet
     queue += s;
     if (!timer && !sleeping) timer = window.setTimeout(flush, Math.max(0, lastFlush + FRAME_MS - performance.now()));
   }
@@ -186,6 +187,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     term.write(q);
   }
   let flushBytes = 0;
+  let sawClear = false;
   let quietUntil = 0;
   // a new font size or window size reflows every line: the reader redraws the whole page
   term.onResize(() => fullRefresh());
@@ -207,16 +209,49 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     if (performance.now() < quietUntil) return;
     if (snap === null) return;              // cursor/selection repaint: the panel leaves it alone
     const n = end - start + 1;
-    // Three waveforms, picked the way an e-reader's controller picks them:
-    //  - DU: a keystroke or a prompt line; black/white only, drawn in place, no flash
-    //  - GC partial: a few lines of output; the rows step through grey, no flash
-    //  - GC flashing: most of the screen changed; inverted flash, and the old page ghosts
+    const now = performance.now();
+    // Interaction (typing, a TUI redrawing as you type, streaming output) runs in DU:
+    // drawn in place with no flash, the way a reader behaves while you are using it.
+    // The controller cleans up once things go quiet. Only an isolated update is
+    // classified on the spot.
+    const busy = now - lastInput < 1200 || now - lastChange < 600;
+    lastChange = now;
+    burst.rows = Math.max(burst.rows, n); burst.start = Math.min(burst.start, start); burst.end = Math.max(burst.end, end);
+    burst.snap ??= snap;
+    if (busy) { clearTimeout(idleTimer); idleTimer = window.setTimeout(cleanup, 700); return; }
+    classify(start, end, n, snap);
+    resetBurst();
+  });
+
+  // Three waveforms, picked the way an e-reader's controller picks them:
+  //  - DU: a keystroke or a prompt line; black/white only, drawn in place, no flash
+  //  - GC partial: a few lines of output; the rows step through grey, no flash
+  //  - GC flashing: most of the screen changed; inverted flash, and the old page ghosts
+  function classify(start: number, end: number, n: number, snap: string) {
+    if (sawClear) { sawClear = false; fullRefresh(); return; }
     if (n <= 2 && flushBytes < 160) return;
     if (n < term.rows * 0.4) { settle(start, end); return; }
     ghost(snap);
     if (++large >= FULL_REFRESH_EVERY) { fullRefresh(); return; }
     partial(start, end);
-  });
+  }
+
+  /** Quiet again after a burst: one clean refresh for everything that changed during it. */
+  function cleanup() {
+    const typing = performance.now() - lastInput < 1200;
+    if (sawClear) { sawClear = false; fullRefresh(); }
+    else if (!typing && burst.snap !== null && burst.rows >= term.rows * 0.4) {
+      ghost(burst.snap);
+      partial(Math.max(0, burst.start), Math.min(term.rows - 1, burst.end));
+    }
+    // typing: nothing to clean; the text was drawn in place and stays crisp
+    resetBurst();
+  }
+  let lastInput = -1e9, lastChange = -1e9, idleTimer = 0;
+  // Enter submits: what follows is output, not typing, so it gets its normal refresh
+  const noteInput = (data: string) => { lastInput = /\r/.test(data) ? -1e9 : performance.now(); };
+  let burst = { rows: 0, start: 1e9, end: -1, snap: null as string | null };
+  const resetBurst = () => { burst = { rows: 0, start: 1e9, end: -1, snap: null }; };
 
   /** Step the ink in through the grey levels, without the inverted flash. */
   function settle(start: number, end: number, afterFlash = false) {
@@ -355,5 +390,5 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     } else progress();
   }
 
-  return { write, enable, fullRefresh, configure, toggleSettings };
+  return { write, enable, fullRefresh, configure, toggleSettings, noteInput };
 }
