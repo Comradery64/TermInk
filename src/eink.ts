@@ -228,12 +228,24 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     if (!on) { term.write(s); return; }
     if (/\x1b\[[23]J|\x1bc/.test(s)) sawClear = true;   // clear = full refresh, once things are quiet
     queue += s;
+    lastData = performance.now();
     if (!timer && !sleeping) timer = window.setTimeout(flush, Math.max(0, lastFlush + FRAME_MS - performance.now()));
   }
 
+  // Never draw half a redraw. An app repaints in several chunks (background, then text);
+  // drawing between them shows a blank or black frame. So hold the frame while the app
+  // is inside a synchronized update (DEC mode 2026), or while bytes are still arriving,
+  // up to a cap so a continuous stream still gets drawn.
+  let lastData = 0, held = 0;
+  const syncOpen = (q: string) => q.lastIndexOf("\x1b[?2026h") > q.lastIndexOf("\x1b[?2026l");
   function flush() {
     timer = 0;
     if (sleeping || !queue) return;
+    const now = performance.now();
+    if (held < 250 && (syncOpen(queue) || now - lastData < 12)) {
+      held += 12; timer = window.setTimeout(flush, 12); return;
+    }
+    held = 0;
     const q = queue; queue = "";
     lastFlush = performance.now();
     snapshot = rows().innerHTML; snapText = lines();

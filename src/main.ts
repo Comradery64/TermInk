@@ -270,18 +270,30 @@ function isPartialEscape(t: string): boolean {
  * terminals, so foregrounds are quantized to the dark grey levels and
  * backgrounds into the light half. Underline colors (58) pass through.
  */
+/** ANSI 16 background codes (40-47, 100-107) -> palette index, so they can be lightened. */
+const ANSI_BG = (n: number) => (n >= 40 && n <= 47 ? n - 40 : n >= 100 && n <= 107 ? n - 92 : -1);
 function remapSgr(seq: string, params: string): string {
-  if (!/(^|;)(38|48)(;|$)/.test(params)) return seq;
+  if (!/(^|;)(38|48|4[0-7]|10[0-7])(;|$)/.test(params)) return seq;
   const k = S.mode === "kaleido";
   const p = params.split(";");
   const out: string[] = [];
   for (let i = 0; i < p.length; i++) {
     const n = p[i];
+    // basic backgrounds use the ink palette, so "black" would be solid ink: lighten them
+    // like any other app background (dark-terminal apps paint whole panels with these)
+    const bgi = ANSI_BG(+n);
+    if (bgi >= 0 && n !== "") {
+      const [r, g, b] = [1, 3, 5].map((j) => parseInt(ANSI[bgi][1].slice(j, j + 2), 16));
+      out.push("48", "2", ...(k ? kaleidoBg : einkBg)(r, g, b).map(String)); continue;
+    }
     const map = n === "38" ? (k ? kaleidoFg : einkFg) : n === "48" ? (k ? kaleidoBg : einkBg) : null;
     if (map && p[i + 1] === "2" && i + 4 < p.length) {
       out.push(n, "2", ...map(+p[i + 2], +p[i + 3], +p[i + 4]).map(String)); i += 4;
     } else if (map && p[i + 1] === "5" && i + 2 < p.length) {
-      const rgb = xterm256(+p[i + 2]);
+      const idx = +p[i + 2];
+      // indices 0-15 are the ANSI palette: as backgrounds they must be lightened too
+      const rgb = xterm256(idx) ?? (n === "48" && idx >= 0 && idx < 16
+        ? [1, 3, 5].map((j) => parseInt(ANSI[idx][1].slice(j, j + 2), 16)) as RGB : null);
       if (rgb) out.push(n, "2", ...map(...rgb).map(String)); else out.push(n, "5", p[i + 2]);
       i += 2;
     } else if (n === "58" && (p[i + 1] === "2" || p[i + 1] === "5")) {
