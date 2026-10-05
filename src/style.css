@@ -84,6 +84,7 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
 
 /* no multiply blend here: it would erase the light rim of the deboss */
 #term { height: 100%; }
+.xterm .xterm-rows { opacity: 0.93; }  /* all text, shadows included */
 /* deboss: glyphs pressed into the paper, lit from the top-left.
    Shadow falls on the upper-left wall of the groove; the lower-right rim catches light. */
 .xterm .xterm-rows span {
