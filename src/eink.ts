@@ -276,11 +276,12 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     // drawn in place with no flash, the way a reader behaves while you are using it.
     // The controller cleans up once things go quiet. Only an isolated update is
     // classified on the spot.
-    const busy = now - lastInput < 1200 || now - lastChange < 600;
+    // a gap under 2.5 s is still the same live display (TUIs tick every 0.5-2 s)
+    const busy = now - lastInput < 1200 || now - lastChange < 2500;
     lastChange = now;
     burst.rows = Math.max(burst.rows, n); burst.start = Math.min(burst.start, start); burst.end = Math.max(burst.end, end);
     burst.snap ??= snap;
-    if (busy) { clearTimeout(idleTimer); idleTimer = window.setTimeout(cleanup, 700); return; }
+    if (busy) { clearTimeout(idleTimer); idleTimer = window.setTimeout(cleanup, 2500); return; }
     classify(start, end, n, snap);
     resetBurst();
   });
@@ -290,6 +291,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   //  - GC partial: a few lines of output; the rows step through grey, no flash
   //  - GC flashing: most of the screen changed; inverted flash, and the old page ghosts
   function classify(start: number, end: number, n: number, snap: string) {
+    if (alt()) { altClear(); return; }
     if (sawClear) { sawClear = false; fullRefresh(); return; }
     if (n <= 2) return;                     // a line or two (prompt, spinner, clock): DU, in place
     if (n < term.rows * 0.4) { settle(start, end); return; }
@@ -299,7 +301,17 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   }
 
   /** Quiet again after a burst: one clean refresh for everything that changed during it. */
+  // Full-screen apps (htop, top, editors) are live views: drawn in place, never
+  // flashed per update. A screen clear may earn a full refresh, at most every 10 s.
+  const alt = () => term.buffer.active.type === "alternate";
+  let lastAltFull = -1e9;
+  function altClear() {
+    if (sawClear && performance.now() - lastAltFull > 10_000) { lastAltFull = performance.now(); fullRefresh(); }
+    sawClear = false;
+  }
+
   function cleanup() {
+    if (alt()) { altClear(); resetBurst(); return; }
     const typing = performance.now() - lastInput < 1200;
     if (sawClear) { sawClear = false; fullRefresh(); }
     else if (!typing && burst.snap !== null && burst.rows >= term.rows * 0.4) {
