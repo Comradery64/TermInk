@@ -86,7 +86,8 @@ const CODE: Section[] = [
     ...TOKENS.map(([t, label, color]) => ({ key: `color.${t}`, label, type: "color" as const, default: color, parent: "hlColor" })),
   ] },
 ];
-const settings = createSettings([...CORE, ...CODE, ...PANEL_SECTIONS], "termink.settings.v2", apply);
+const settings = createSettings([...CORE, ...CODE, ...PANEL_SECTIONS], "termink.settings.v2", apply,
+  { margin: 10 });   // thin, even margins: the panel edge is the frame
 const S = settings.values;
 
 const term = new Terminal({
@@ -118,13 +119,27 @@ const highlight = createSyntax(() => ({
   inputSgr: INPUT_SGR,
 }));
 
+/**
+ * Fit the grid, then centre it: xterm only uses whole cells, so up to a cell of
+ * width and a row of height is left over. Split it across both sides instead of
+ * leaving it all on the right and bottom, so the margins read as even.
+ */
+function fitPage() {
+  fit.fit();
+  const screen = el.querySelector<HTMLElement>(".xterm-screen");
+  if (!screen) return;
+  const dx = Math.max(0, (el.clientWidth - screen.offsetWidth) / 2);
+  const dy = Math.max(0, (el.clientHeight - screen.offsetHeight) / 2);
+  screen.style.transform = `translate(${Math.floor(dx)}px, ${Math.floor(dy)}px)`;
+}
+
 /** Push settings into xterm, the page layout and the panel engine. */
 function apply(v: Values, key?: string) {
   if (key === "font") {
     // wait for the face before measuring, or the cell grid is sized for the fallback
     document.fonts.load(`15px "${v.font}"`).then(() => {
       term.options.fontFamily = `"${v.font}", monospace`;
-      fit.fit(); panel.fullRefresh();
+      fitPage(); panel.fullRefresh();
     });
   }
   const reflow = !key || ["fontSize", "lineHeight", "margin", "bezel", "chin", "chinSize", "status", "footer", "lineNumbers"].includes(key);
@@ -141,7 +156,7 @@ function apply(v: Values, key?: string) {
   panel.configure(v);
   gutter.setMode(String(v.lineNumbers));
   if (reflow || key === "lineNumbers") document.documentElement.style.setProperty("--gw", v.lineNumbers === "off" ? "0px" : "4.2em");
-  if (reflow && term.element) fit.fit();
+  if (reflow && term.element) fitPage();
   if (key === "mode" || key === "light") panel.fullRefresh();
 }
 
@@ -154,7 +169,7 @@ async function main() {
   // ghosts and refresh flashes are plain CSS over them.
   term.open(el);
   panel.enable(true);
-  fit.fit();
+  fitPage();
 
   const onData = new Channel<Uint8Array>();
   const dec = new TextDecoder();
@@ -169,7 +184,7 @@ async function main() {
   term.onData((s) => { panel.noteInput(s); if (ready) invoke("write", { data: Array.from(enc.encode(s)) }); });
   term.onResize(({ cols, rows }) => invoke("resize", { cols, rows }));
 
-  new ResizeObserver(() => fit.fit()).observe(el);
+  new ResizeObserver(() => fitPage()).observe(el);
   term.attachCustomKeyEventHandler(keys);
   term.focus();
   watchTrafficLights();

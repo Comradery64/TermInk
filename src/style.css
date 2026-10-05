@@ -239,8 +239,8 @@ html, body { background: var(--bezel); }
 #status .off, #footer .off { display: none !important; }
 #status .right { margin-left: auto; }
 #sheet.no-status #status, #sheet.no-footer #footer { display: none; }
-#sheet:not(.no-status) { padding-top: calc(24px + var(--m) / 2); }
-#sheet:not(.no-footer) { padding-bottom: calc(24px + var(--m) / 2); }
+#sheet:not(.no-status) { padding-top: calc(24px + var(--m)); }
+#sheet:not(.no-footer) { padding-bottom: calc(24px + var(--m)); }
 #bezel.no-mark .mark { display: none; }
 :root { --bezel-w: 30px; --chin: 0px; --m: 30px; }
 
