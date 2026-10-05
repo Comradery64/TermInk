@@ -385,4 +385,4 @@ html, body, .xterm .xterm-viewport { scrollbar-width: none; }
 html::-webkit-scrollbar, body::-webkit-scrollbar,
 .xterm .xterm-viewport::-webkit-scrollbar { display: none; width: 0; height: 0; }
 /* bottom keeps the previous 10px default while top and sides got one more pixel */
-#sheet.no-footer { padding-bottom: calc(var(--m) - 2px); }
+#sheet.no-footer { padding-bottom: calc(var(--m) - 4px); }
