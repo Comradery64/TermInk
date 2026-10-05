@@ -87,8 +87,31 @@ function inkify(chunk: string): string {
   if (tail !== -1 && tail > s.length - 8 && !/[\x07\x9c]|\x1b\\/.test(s.slice(tail))) {
     carry = s.slice(tail); s = s.slice(0, tail);
   }
-  return s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) =>
+  s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) =>
     m === "A" ? INK_SGR : m === "C" ? RESET_SGR : "");
+  return s.replace(/\x1b\[([0-9;]*)m/g, remapInverse);
+}
+
+/**
+ * The canvas background is transparent, so SGR 7 (inverse) would paint text
+ * in "transparent" and the cell in ink: a dark bar with no letters (zsh paste
+ * highlight, grep --color, less). Replace 7 with a highlighter background.
+ */
+const HIGHLIGHT_BG = "48;2;200;226;245";
+function remapInverse(seq: string, params: string): string {
+  if (!/(^|;)(7|27)(;|$)/.test(params)) return seq;
+  const p = params.split(";");
+  const out: string[] = [];
+  for (let i = 0; i < p.length; i++) {
+    const n = p[i];
+    if ((n === "38" || n === "48" || n === "58") && (p[i + 1] === "2" || p[i + 1] === "5")) {
+      const len = p[i + 1] === "2" ? 5 : 3;      // keep extended color runs intact
+      out.push(...p.slice(i, i + len)); i += len - 1;
+    } else if (n === "7") out.push(HIGHLIGHT_BG);
+    else if (n === "27") out.push("49");
+    else out.push(n);
+  }
+  return `\x1b[${out.join(";")}m`;
 }
 
 /** Lock the paper ruling to xterm's actual cell height. */
