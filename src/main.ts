@@ -86,12 +86,20 @@ function inkify(chunk: string): string {
   let s = carry + chunk;
   carry = "";
   const tail = s.lastIndexOf("\x1b");
-  if (tail !== -1 && tail > s.length - 8 && !/[\x07\x9c]|\x1b\\/.test(s.slice(tail))) {
+  if (tail !== -1 && isPartialEscape(s.slice(tail))) {
     carry = s.slice(tail); s = s.slice(0, tail);
   }
   s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) =>
     m === "A" ? INK_SGR : m === "C" ? RESET_SGR : "");
   return s.replace(/\x1b\[([0-9;]*)m/g, remapSgr);
+}
+
+/** True only for an escape sequence that is genuinely cut off at the chunk end. */
+function isPartialEscape(t: string): boolean {
+  if (t.length === 1) return true;                                  // lone ESC
+  if (t[1] === "]") return !/[\x07\x9c]|\x1b\\/.test(t) && t.length < 64;  // OSC without terminator
+  if (t[1] === "[") return !/[\x40-\x7e]/.test(t.slice(2));         // CSI without final byte
+  return false;                                                     // anything else: pass through
 }
 
 /**
