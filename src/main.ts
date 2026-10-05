@@ -4,7 +4,9 @@ import { invoke, Channel } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
 import "./fonts.css";
 import { createPanel, PANEL_SECTIONS } from "./eink";
-import { createSettings, CORE, type Values } from "./settings";
+import { createSettings, CORE, type Section, type Values } from "./settings";
+import { createSyntax, TOKENS, type Token } from "./syntax";
+import { createGutter } from "./gutter";
 
 
 /**
@@ -70,7 +72,18 @@ const panelTheme = (map: (r: number, g: number, b: number) => RGB) => ({
 });
 const THEMES = { eink: panelTheme(einkFg), kaleido: panelTheme(kaleidoFg) };
 const INPUT_SGR = `\x1b[38;2;${level(0).join(";")}m`;   // typed commands: full black; output one level up
-const settings = createSettings([...CORE, ...PANEL_SECTIONS], "termink.settings.v2", apply);
+const CODE: Section[] = [
+  { title: "Line numbers", fields: [
+    { key: "lineNumbers", label: "Line numbers", type: "select", default: "off",
+      options: [["off", "Off"], ["absolute", "Absolute"], ["relative", "Relative"]] },
+  ] },
+  { title: "Syntax highlighting", fields: [
+    { key: "hlCommands", label: "Typed commands", type: "toggle", default: true },
+    { key: "hlOutput", label: "Command output", type: "toggle", default: true },
+    ...TOKENS.map(([t, label, color]) => ({ key: `color.${t}`, label, type: "color" as const, default: color })),
+  ] },
+];
+const settings = createSettings([...CORE, ...CODE, ...PANEL_SECTIONS], "termink.settings.v2", apply);
 const S = settings.values;
 
 const term = new Terminal({
@@ -91,6 +104,16 @@ term.loadAddon(fit);
 const el = document.getElementById("term")!;
 const panel = createPanel(term, document.getElementById("sheet")!, settings.el);
 
+const gutter = createGutter(term, document.getElementById("sheet")!);
+const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as RGB;
+// token colors are raw here; remapSgr then puts them through the panel like any app color
+const highlight = createSyntax(() => ({
+  commands: !!S.hlCommands,
+  output: !!S.hlOutput,
+  color: (t: Token) => hex(String(S[`color.${t}`])),
+  inputSgr: INPUT_SGR,
+}));
+
 /** Push settings into xterm, the page layout and the panel engine. */
 function apply(v: Values, key?: string) {
   if (key === "font") {
@@ -100,7 +123,7 @@ function apply(v: Values, key?: string) {
       fit.fit(); panel.fullRefresh();
     });
   }
-  const reflow = !key || ["fontSize", "lineHeight", "margin", "bezel", "chin", "chinSize", "status", "footer"].includes(key);
+  const reflow = !key || ["fontSize", "lineHeight", "margin", "bezel", "chin", "chinSize", "status", "footer", "lineNumbers"].includes(key);
   Object.assign(term.options, {
     fontSize: Number(v.fontSize),
     lineHeight: Number(v.lineHeight),
@@ -112,6 +135,8 @@ function apply(v: Values, key?: string) {
   document.documentElement.dataset.mode = String(v.mode);
   document.documentElement.style.setProperty("--m", `${v.margin}px`);
   panel.configure(v);
+  gutter.setMode(String(v.lineNumbers));
+  if (reflow || key === "lineNumbers") document.documentElement.style.setProperty("--gw", v.lineNumbers === "off" ? "0px" : "4.2em");
   if (reflow && term.element) fit.fit();
   if (key === "mode" || key === "light") panel.fullRefresh();
 }
@@ -200,7 +225,7 @@ function inkify(chunk: string): string {
     if (m === "A") ready = true;
     return m === "B" ? INPUT_SGR : m === "A" || m === "C" ? RESET_SGR : "";
   });
-  return s.replace(/\x1b\[([0-9;]*)m/g, remapSgr);
+  return highlight(s).replace(/\x1b\[([0-9;]*)m/g, remapSgr);
 }
 
 /** True only for an escape sequence that is genuinely cut off at the chunk end. */

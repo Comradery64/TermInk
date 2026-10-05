@@ -10,7 +10,8 @@ export type Field =
   | (Base & { type: "range"; default: number; min: number; max: number; step: number; unit?: string })
   | (Base & { type: "select"; default: string; options: [string, string][] })
   // options: [css family, label]; each choice is previewed in its own face
-  | (Base & { type: "font"; default: string; options: [string, string][] });
+  | (Base & { type: "font"; default: string; options: [string, string][] })
+  | (Base & { type: "color"; default: string });
 export type Section = { title: string; fields: Field[] };
 export type Values = Record<string, boolean | number | string>;
 
@@ -66,6 +67,9 @@ export function createSettings(
     if (f.type === "range")
       return `<label class="row range${indent}" data-row="${f.key}"><span>${f.label}</span>`
         + `<input type="range" data-k="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}"><output></output></label>`;
+    if (f.type === "color")
+      return `<label class="row color${indent}" data-row="${f.key}"><span>${f.label}</span>`
+        + `<input type="color" data-k="${f.key}"><output></output></label>`;
     if (f.type === "font")
       return `<div class="row font${indent}" data-row="${f.key}"><span>${f.label}</span><span class="fonts">`
         + f.options.map(([v, l]) => `<button type="button" data-k="${f.key}" data-v="${v}" style="font-family:'${v}',monospace">`
@@ -83,6 +87,9 @@ export function createSettings(
       r.classList.toggle("disabled", off);
       if (f.type === "toggle") {
         const i = r.querySelector("input")!; i.checked = !!values[f.key]; i.disabled = off;
+      } else if (f.type === "color") {
+        const i = r.querySelector("input")!; i.value = String(values[f.key]); i.disabled = off;
+        r.querySelector("output")!.textContent = String(values[f.key]);
       } else if (f.type === "range") {
         const i = r.querySelector("input")!; i.value = String(values[f.key]); i.disabled = off;
         r.querySelector("output")!.textContent = `${values[f.key]}${f.unit ?? ""}`;
@@ -106,7 +113,7 @@ export function createSettings(
   el.addEventListener("input", (e) => {
     const i = e.target as HTMLInputElement, k = i.dataset.k;
     if (!k) return;
-    set(k, i.type === "checkbox" ? i.checked : Number(i.value));
+    set(k, i.type === "checkbox" ? i.checked : i.type === "color" ? i.value : Number(i.value));
   });
   el.addEventListener("click", (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>("button");

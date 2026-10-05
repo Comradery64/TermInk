@@ -309,3 +309,19 @@ html, body { background: var(--bezel); }
 #settings .fonts b { font-size: 11px; font-weight: 700; }
 #settings .fonts i { font-style: normal; font-size: 13px; }
 #settings .fonts button.on { background: var(--ink); color: var(--page); }
+
+/* ---- line numbers: a quiet column in the left margin ---- */
+#sheet { padding-left: calc(var(--m) + var(--gw, 0px)); }
+#gutter {
+  position: absolute; top: 0; bottom: 0;
+  right: calc(100% + 0.9em);
+  width: 3.4em;
+  pointer-events: none; user-select: none;
+}
+#gutter div {
+  position: absolute; left: 0; right: 0;
+  text-align: right;
+  color: #8f8e89;                 /* level 9: present, never competing with the text */
+  font-variant-numeric: tabular-nums;
+}
+#gutter div.cur { color: var(--ink-3); font-weight: 700; }
