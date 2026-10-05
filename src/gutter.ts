@@ -17,7 +17,7 @@ export function createGutter(term: Terminal, sheet: HTMLElement) {
     const b = term.buffer.active;
     const on = mode !== "off" && b.type === "normal" && !!screen && !!rows;
     sheet.classList.toggle("numbered", on);
-    if (!on) { g.remove(); return; }
+    if (!on) { g.remove(); width(0); return; }
     if (g.parentElement !== screen) screen!.append(g);
 
     // logical number of the first visible row: count unwrapped lines above it
@@ -40,7 +40,23 @@ export function createGutter(term: Terminal, sheet: HTMLElement) {
     }
     g.innerHTML = html;
     g.style.fontFamily = term.options.fontFamily!;
-    g.style.fontSize = `${Math.round(term.options.fontSize! * 0.8)}px`;
+    const size = Math.round(term.options.fontSize! * 0.8);
+    g.style.fontSize = `${size}px`;
+    // only as wide as the biggest number on screen (two digits minimum), plus a one-cell gap
+    width(Math.max(2, String(n).length), size);
+  }
+
+  let digits = -1, px = -1;
+  function width(d: number, size = 0) {
+    const cell = (term as any)._core?._renderService?.dimensions?.css?.cell?.width ?? term.options.fontSize! * 0.6;
+    const numW = Math.ceil(d * size * 0.6), gap = Math.round(cell);
+    const total = d ? numW + gap : 0;
+    if (d === digits && total === px) return;     // unchanged: no reflow
+    digits = d; px = total;
+    const root = document.documentElement.style;
+    root.setProperty("--gw", `${total}px`);
+    root.setProperty("--nw", `${numW}px`);
+    root.setProperty("--gap", `${gap}px`);
   }
 
   term.onRender(render);

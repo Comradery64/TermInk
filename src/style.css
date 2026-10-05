@@ -317,8 +317,8 @@ html, body { background: var(--bezel); }
 #sheet { padding-left: calc(var(--m) + var(--gw, 0px)); }
 #gutter {
   position: absolute; top: 0; bottom: 0;
-  right: calc(100% + 0.9em);
-  width: 3.4em;
+  right: calc(100% + var(--gap, 8px));
+  width: var(--nw, 2ch);
   pointer-events: none; user-select: none;
 }
 #gutter div {

@@ -155,7 +155,6 @@ function apply(v: Values, key?: string) {
   document.documentElement.style.setProperty("--m", `${v.margin}px`);
   panel.configure(v);
   gutter.setMode(String(v.lineNumbers));
-  if (reflow || key === "lineNumbers") document.documentElement.style.setProperty("--gw", v.lineNumbers === "off" ? "0px" : "4.2em");
   if (reflow && term.element) fitPage();
   if (key === "mode" || key === "light") panel.fullRefresh();
 }
