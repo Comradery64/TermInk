@@ -85,6 +85,34 @@ fn install_zsh_integration() -> std::io::Result<std::path::PathBuf> {
     Ok(dir)
 }
 
+/// Fade the macOS close/minimize/zoom buttons in or out.
+#[tauri::command]
+fn traffic_lights(window: tauri::Window, visible: bool) {
+    #[cfg(target_os = "macos")]
+    {
+        let w = window.clone();
+        let _ = window.run_on_main_thread(move || {
+            use objc2_app_kit::{NSAnimationContext, NSWindow, NSWindowButton};
+            let Ok(ptr) = w.ns_window() else { return };
+            let ns: &NSWindow = unsafe { &*(ptr as *const NSWindow) };
+            let alpha = if visible { 1.0 } else { 0.0 };
+            NSAnimationContext::beginGrouping();
+            NSAnimationContext::currentContext().setDuration(0.18);
+            for kind in [NSWindowButton::CloseButton, NSWindowButton::MiniaturizeButton, NSWindowButton::ZoomButton] {
+                if let Some(btn) = ns.standardWindowButton(kind) {
+                    unsafe {
+                        let anim: objc2::rc::Retained<objc2::runtime::AnyObject> = objc2::msg_send![&*btn, animator];
+                        let _: () = objc2::msg_send![&*anim, setAlphaValue: alpha];
+                    }
+                }
+            }
+            NSAnimationContext::endGrouping();
+        });
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (window, visible);
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(PtyState::default())
@@ -93,7 +121,7 @@ pub fn run() {
             app.set_menu(tauri::menu::Menu::default(app.handle())?)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![spawn, write, resize])
+        .invoke_handler(tauri::generate_handler![spawn, write, resize, traffic_lights])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

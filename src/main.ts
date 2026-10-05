@@ -65,6 +65,17 @@ async function main() {
   new ResizeObserver(() => { fit.fit(); applyRuling(); }).observe(el);
   term.attachCustomKeyEventHandler(zoomKeys);
   term.focus();
+  watchTrafficLights();
+}
+
+/** macOS window buttons: hidden until the pointer is over the top strip. */
+function watchTrafficLights() {
+  let shown = true;
+  const set = (v: boolean) => { if (v !== shown) { shown = v; invoke("traffic_lights", { visible: v }); } };
+  const hotZone = () => parseFloat(getComputedStyle(document.getElementById("sheet")!).paddingTop) || 36;
+  document.addEventListener("mousemove", (e) => set(e.clientY <= hotZone() + 8));
+  document.addEventListener("mouseleave", () => set(false));
+  set(false);
 }
 
 /** Cmd/Ctrl +/-/0 change font size; everything else passes to xterm. */
