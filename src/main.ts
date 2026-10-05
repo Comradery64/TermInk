@@ -49,7 +49,7 @@ async function main() {
 
   const onData = new Channel<Uint8Array>();
   const dec = new TextDecoder();
-  onData.onmessage = (bytes) => term.write(dec.decode(new Uint8Array(bytes), { stream: true }));
+  onData.onmessage = (bytes) => term.write(inkify(dec.decode(new Uint8Array(bytes), { stream: true })));
 
   await invoke("spawn", { cols: term.cols, rows: term.rows, onData });
 
@@ -58,7 +58,37 @@ async function main() {
   term.onResize(({ cols, rows }) => invoke("resize", { cols, rows }));
 
   new ResizeObserver(() => { fit.fit(); applyRuling(); }).observe(el);
+  term.attachCustomKeyEventHandler(zoomKeys);
   term.focus();
+}
+
+/** Cmd/Ctrl +/-/0 change font size; everything else passes to xterm. */
+function zoomKeys(e: KeyboardEvent): boolean {
+  if (e.type !== "keydown" || !(e.metaKey || e.ctrlKey)) return true;
+  const step = e.key === "=" || e.key === "+" ? 1 : e.key === "-" ? -1 : e.key === "0" ? 0 : null;
+  if (step === null) return true;
+  term.options.fontSize = step === 0 ? 15 : Math.min(32, Math.max(9, term.options.fontSize! + step));
+  fit.fit(); applyRuling();
+  return false;
+}
+
+/**
+ * Turn OSC 133 shell-integration marks into ink colors:
+ * A (prompt start) -> blue ink, C (output start) -> graphite.
+ * A sequence may be split across chunks, so hold back a trailing partial ESC.
+ */
+const INK_SGR = "\x1b[38;2;28;42;96m";
+const RESET_SGR = "\x1b[39m";
+let carry = "";
+function inkify(chunk: string): string {
+  let s = carry + chunk;
+  carry = "";
+  const tail = s.lastIndexOf("\x1b");
+  if (tail !== -1 && tail > s.length - 8 && !/[\x07\x9c]|\x1b\\/.test(s.slice(tail))) {
+    carry = s.slice(tail); s = s.slice(0, tail);
+  }
+  return s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) =>
+    m === "A" ? INK_SGR : m === "C" ? RESET_SGR : "");
 }
 
 /** Lock the paper ruling to xterm's actual cell height. */

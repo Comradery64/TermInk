@@ -16,10 +16,11 @@
 }
 
 :root {
-  --paper: #f7f4ea;
-  --rule-color: #b9cde3;
-  --margin: #d9534f;
-  --gutter: 72px;
+  --paper: #f4f4f4;
+  --rule-color: #9fcbea;
+  --margin: #b57ab2;
+  --hole: #a9d4f1;
+  --gutter: 84px;
 }
 
 html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
@@ -39,6 +40,7 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
       var(--rule-color) calc(var(--rule) - 1px),
       var(--rule-color) var(--rule)
     ) 0 var(--rule-offset) / 100% var(--rule),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"),
     var(--paper);
 }
 /* red margin line */
@@ -46,10 +48,10 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
   content: "";
   position: absolute;
   top: 0; bottom: 0;
-  left: calc(var(--gutter) - 12px);
-  width: 2px;
+  left: calc(var(--gutter) - 14px);
+  width: 1.5px;
   background: var(--margin);
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 #header {
@@ -59,20 +61,20 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
   text-align: right;
   font: 600 11px/24px "Monaspace Radon", monospace;
   letter-spacing: 0.25em;
-  color: #8a94a6;
+  color: #9aa3b5;
   user-select: none;
 }
 
 #holes {
   position: absolute;
-  left: 18px; top: 0; bottom: 0;
+  left: 24px; top: 0; bottom: 0;
   display: flex; flex-direction: column; justify-content: space-evenly;
   pointer-events: none;
 }
 #holes span {
-  width: 16px; height: 16px; border-radius: 50%;
-  background: #1c1c1c;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.6);
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--hole);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
 }
 
 #term { height: 100%; mix-blend-mode: multiply; }
