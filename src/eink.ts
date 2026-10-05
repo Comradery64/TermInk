@@ -103,7 +103,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   const bezel = mk("bezel", document.body);
   bezel.setAttribute("data-tauri-drag-region", "");
   const frame = mk("frame", document.body);
-  frame.innerHTML = `<span class="mark">termink</span>`;
+  frame.innerHTML = `<span class="mark">TermInk</span>`;
   // The frame is the bezel drawn again above the screen, like plastic over glass, with a
   // window cut to the screen's exact rounded rect: anything poking past the glass
   // (scrollbars, gutters) is physically hidden. It ignores the mouse entirely.

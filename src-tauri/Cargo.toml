@@ -3,6 +3,11 @@ name = "termink"
 version = "0.1.0"
 edition = "2021"
 
+# the app binary, and so the Dock and menu name in dev, is always "TermInk"
+[[bin]]
+name = "TermInk"
+path = "src/main.rs"
+
 [lib]
 name = "termink_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
