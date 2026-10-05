@@ -89,7 +89,7 @@ const CODE: Section[] = [
 const settings = createSettings([...CORE, ...CODE, ...PANEL_SECTIONS], "termink.settings.v2", apply,
   // TermInk's defaults, tuned on the real panel: thin even margins, Neon at 13px,
   // a slim bezel with well-rounded glass, and a quiet title bar
-  { margin: 11, font: "Monaspace Neon", fontSize: 13, clock: false, battery: false, bezel: 16, chin: true, chinSize: 12, corner: 17 });
+  { margin: 10, font: "Monaspace Neon", fontSize: 13, clock: false, battery: false, bezel: 16, chin: true, chinSize: 12, corner: 17 });
 const S = settings.values;
 
 const term = new Terminal({
