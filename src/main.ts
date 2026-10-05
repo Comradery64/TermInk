@@ -87,7 +87,9 @@ const CODE: Section[] = [
   ] },
 ];
 const settings = createSettings([...CORE, ...CODE, ...PANEL_SECTIONS], "termink.settings.v2", apply,
-  { margin: 10 });   // thin, even margins: the panel edge is the frame
+  // TermInk's defaults, tuned on the real panel: thin even margins, Neon at 13px,
+  // a slim bezel with well-rounded glass, and a quiet title bar
+  { margin: 10, font: "Monaspace Neon", fontSize: 13, clock: false, battery: false, bezel: 18, chinSize: 12, corner: 17 });
 const S = settings.values;
 
 const term = new Terminal({
@@ -219,7 +221,7 @@ function keys(e: KeyboardEvent): boolean {
   if (!e.shiftKey && e.key === ",") { panel.toggleSettings(); return false; }
   const step = e.key === "=" || e.key === "+" ? 1 : e.key === "-" ? -1 : e.key === "0" ? 0 : null;
   if (step === null) return true;
-  settings.set("fontSize", step === 0 ? 15 : Math.min(32, Math.max(9, Number(S.fontSize) + step)));
+  settings.set("fontSize", step === 0 ? Number(settings.defaults.fontSize) : Math.min(32, Math.max(9, Number(S.fontSize) + step)));
   panel.fullRefresh();     // zoom reflows the whole page, history included
   return false;
 }

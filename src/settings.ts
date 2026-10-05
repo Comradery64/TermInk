@@ -40,6 +40,7 @@ export const CORE: Section[] = [
 
 export interface Settings {
   values: Values;
+  defaults: Values;
   el: HTMLElement;
   set(key: string, v: boolean | number | string): void;
 }
@@ -126,5 +127,5 @@ export function createSettings(
   });
 
   sync();
-  return { values, el, set };
+  return { values, defaults, el, set };
 }
