@@ -21,15 +21,15 @@ const term = new Terminal({
     cursor: INK,
     selectionBackground: "#c8e2f5",
     selectionInactiveBackground: "#dde9f3",
-    blue: INK,
-    brightBlue: INK,
-    red: "rgba(190, 50, 40, 0.9)",
-    green: "rgba(40, 110, 60, 0.9)",
-    yellow: "rgba(160, 120, 20, 0.9)",
-    magenta: "rgba(120, 40, 120, 0.9)",
-    cyan: "rgba(20, 110, 130, 0.9)",
-    black: GRAPHITE,
-    white: "rgba(90, 90, 100, 0.7)",
+    // ink palette for a light page: every color dark enough to read on paper
+    black: GRAPHITE,        brightBlack: "#5a5e6a",
+    red: "#b3261e",         brightRed: "#c62828",
+    green: "#2e7d32",       brightGreen: "#1b7f3b",
+    yellow: "#8a6d00",      brightYellow: "#946f00",
+    blue: INK,              brightBlue: INK,
+    magenta: "#7b3f8c",     brightMagenta: "#8e3f9e",
+    cyan: "#0e6e7c",        brightCyan: "#0f7f90",
+    white: "#6b6f7b",       brightWhite: "#3a3d47",
   },
 });
 
@@ -90,29 +90,54 @@ function inkify(chunk: string): string {
   }
   s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) =>
     m === "A" ? INK_SGR : m === "C" ? RESET_SGR : "");
-  return s.replace(/\x1b\[([0-9;]*)m/g, remapInverse);
+  return s.replace(/\x1b\[([0-9;]*)m/g, remapSgr);
 }
 
 /**
- * The canvas background is transparent, so SGR 7 (inverse) would paint text
- * in "transparent" and the cell in ink: a dark bar with no letters (zsh paste
- * highlight, grep --color, less). Replace 7 with a highlighter background.
+ * Rewrite SGR sequences for a light page:
+ *  - 7/27 (inverse): the canvas background is transparent, so inverse would
+ *    paint letters transparent and the cell in ink. Use a highlighter instead.
+ *  - 38;5;n and 38;2;r;g;b foregrounds: apps pick these for dark terminals;
+ *    clamp their luminance so pale yellows/cyans stay legible on paper.
  */
 const HIGHLIGHT_BG = "48;2;200;226;245";
-function remapInverse(seq: string, params: string): string {
-  if (!/(^|;)(7|27)(;|$)/.test(params)) return seq;
+const MAX_FG_LUMA = 0.42;
+function remapSgr(seq: string, params: string): string {
+  if (!/(^|;)(7|27|38)(;|$)/.test(params)) return seq;
   const p = params.split(";");
   const out: string[] = [];
   for (let i = 0; i < p.length; i++) {
     const n = p[i];
-    if ((n === "38" || n === "48" || n === "58") && (p[i + 1] === "2" || p[i + 1] === "5")) {
-      const len = p[i + 1] === "2" ? 5 : 3;      // keep extended color runs intact
+    if (n === "38" && p[i + 1] === "2" && i + 4 < p.length) {
+      out.push("38", "2", ...inkClamp(+p[i + 2], +p[i + 3], +p[i + 4]).map(String)); i += 4;
+    } else if (n === "38" && p[i + 1] === "5" && i + 2 < p.length) {
+      const rgb = xterm256(+p[i + 2]);
+      if (rgb) out.push("38", "2", ...inkClamp(...rgb).map(String)); else out.push("38", "5", p[i + 2]);
+      i += 2;
+    } else if ((n === "48" || n === "58") && (p[i + 1] === "2" || p[i + 1] === "5")) {
+      const len = p[i + 1] === "2" ? 5 : 3;      // keep background/underline runs intact
       out.push(...p.slice(i, i + len)); i += len - 1;
     } else if (n === "7") out.push(HIGHLIGHT_BG);
     else if (n === "27") out.push("49");
     else out.push(n);
   }
   return `\x1b[${out.join(";")}m`;
+}
+
+/** Darken an RGB foreground until its luminance is at most MAX_FG_LUMA. */
+function inkClamp(r: number, g: number, b: number): [number, number, number] {
+  const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  if (luma <= MAX_FG_LUMA) return [r, g, b];
+  const k = MAX_FG_LUMA / luma;
+  return [Math.round(r * k), Math.round(g * k), Math.round(b * k)];
+}
+
+/** RGB for xterm 256-color indices 16..255; null for 0..15 (theme handles those). */
+function xterm256(n: number): [number, number, number] | null {
+  if (n < 16 || n > 255 || Number.isNaN(n)) return null;
+  if (n >= 232) { const v = 8 + (n - 232) * 10; return [v, v, v]; }
+  const c = n - 16, lv = [0, 95, 135, 175, 215, 255];
+  return [lv[Math.floor(c / 36)], lv[Math.floor(c / 6) % 6], lv[c % 6]];
 }
 
 /** Lock the paper ruling to xterm's actual cell height. */
