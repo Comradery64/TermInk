@@ -98,15 +98,33 @@ function redraw(row: HTMLElement) {
 }
 
 export function drawGlyphs(term: Terminal, sheet: HTMLElement) {
-  term.onRender(({ start, end }) => {
+  // xterm repaints rows on more paths than onRender reports (focus and blur restyle
+  // the cursor row, for one), so watch the rows themselves: any row whose content
+  // changes is redrawn. Our own replacements leave no drawable text, so they settle.
+  let watched: HTMLElement | null = null;
+  const rowOf = (n: Node | null, rows: HTMLElement): HTMLElement | null => {
+    while (n && n.parentNode !== rows) n = n.parentNode;
+    return n as HTMLElement | null;
+  };
+  const observer = new MutationObserver((muts) => {
+    if (!watched) return;
+    const dirty = new Set<HTMLElement>();
+    for (const m of muts) { const r = rowOf(m.target, watched); if (r) dirty.add(r); }
+    if (muts.some((m) => m.target === watched)) Array.from(watched.children).forEach((r) => dirty.add(r as HTMLElement));
+    dirty.forEach(redraw);
+  });
+
+  term.onRender(() => {
     const rows = sheet.querySelector<HTMLElement>(".xterm-rows:not(.eink-ghost)");
     if (!rows) return;
     // exact cell width from xterm (semi-private, isolated here); glyph boxes are sized to it
     const cw = (term as any)._core?._renderService?.dimensions?.css?.cell?.width ?? rows.clientWidth / term.cols;
     rows.parentElement!.style.setProperty("--cw", `${cw}px`);   // on the screen, so ghosts inherit it
-    for (let i = start; i <= end; i++) {
-      const r = rows.children[i] as HTMLElement | undefined;
-      if (r) redraw(r);
+    if (watched !== rows) {
+      observer.disconnect();
+      observer.observe(rows, { childList: true, subtree: true, characterData: true });
+      watched = rows;
+      Array.from(rows.children).forEach((r) => redraw(r as HTMLElement));
     }
   });
 }
