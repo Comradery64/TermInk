@@ -246,7 +246,8 @@ html, body { background: var(--bezel); }
 #status .off, #footer .off { display: none !important; }
 #status .right { margin-left: auto; }
 #sheet.no-status #status, #sheet.no-footer #footer { display: none; }
-#sheet:not(.no-status) { padding-top: calc(24px + var(--m)); }
+#sheet:not(.no-status) { padding-top: calc(24px + var(--m) + 10px); }
+#sheet.no-status { padding-top: calc(var(--m) + 10px); }   /* extra air above the text */
 #sheet:not(.no-footer) { padding-bottom: calc(24px + var(--m)); }
 #frame.no-mark .mark { display: none; }
 :root { --bezel-w: 30px; --chin: 0px; --m: 30px; }
