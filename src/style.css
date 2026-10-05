@@ -56,6 +56,9 @@ html, body { background: var(--bezel); }
   background: var(--page);
   /* a hairline gap between glass and plastic */
   box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 1px 0 1px rgba(255,255,255,0.04);
+  /* the glass is cut with softly rounded corners; everything drawn on it is clipped to them */
+  border-radius: var(--corner, 6px);
+  overflow: hidden;
 }
 
 /* ---- type: crisp, flat, edges slightly eaten by the particle grain ---- */
@@ -336,3 +339,5 @@ html, body { background: var(--bezel); }
   /* a hair wider so neighbouring cells overlap and fractional widths leave no seam */
   margin-right: -0.4px; padding-right: 0.4px;
 }
+/* overlays on the glass follow its corners (the recess shadow especially) */
+#light, #front, #grain, #sleep, #sheet::after { border-radius: inherit; }
