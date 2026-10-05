@@ -72,8 +72,8 @@ async function main() {
 function watchTrafficLights() {
   let shown = true;
   // appear when the pointer is in the corner where the buttons live
-  // (top-left on macOS), within 15% of the window's width and height
-  const ZONE = 0.15;
+  // (top-left on macOS), within 9% of the window's width and height
+  const ZONE = 0.09;
   const set = (v: boolean) => {
     if (v === shown) return;
     shown = v;
