@@ -49,7 +49,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   const mk = (id: string, parent: HTMLElement = sheet, tag = "div") => {
     const e = document.createElement(tag); e.id = id; e.className = "panel-part"; parent.append(e); return e;
   };
-  mk("light"); mk("grid"); mk("front");
+  mk("light"); mk("front");
   const status = mk("status");
   status.innerHTML = `<span class="brand">TermInk</span><span class="title"></span>`
     + `<span class="right"><span class="cold">${COLD ? "❄" : ""}</span><span class="clock"></span>`
