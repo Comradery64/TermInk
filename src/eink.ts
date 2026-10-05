@@ -320,6 +320,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   let wheelAcc = 0, wheelLock = 0;
   sheet.addEventListener("wheel", (e) => {
     if (!on || term.buffer.active.type !== "normal") return;   // full-screen apps keep the wheel
+    if ((e.target as HTMLElement).closest("#settings")) return;  // the settings drawer scrolls normally
     e.preventDefault(); e.stopPropagation();
     if (performance.now() < wheelLock) return;
     wheelAcc += e.deltaY;
