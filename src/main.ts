@@ -55,8 +55,11 @@ async function main() {
 
   await invoke("spawn", { cols: term.cols, rows: term.rows, onData });
 
+  // ignore keystrokes until the shell has drawn its first prompt (OSC 133;A),
+  // or 2s have passed for shells without the integration
+  setTimeout(() => (ready = true), 2000);
   const enc = new TextEncoder();
-  term.onData((s) => invoke("write", { data: Array.from(enc.encode(s)) }));
+  term.onData((s) => { if (ready) invoke("write", { data: Array.from(enc.encode(s)) }); });
   term.onResize(({ cols, rows }) => invoke("resize", { cols, rows }));
 
   new ResizeObserver(() => { fit.fit(); applyRuling(); }).observe(el);
@@ -82,6 +85,7 @@ function zoomKeys(e: KeyboardEvent): boolean {
 const INK_SGR = "\x1b[38;2;28;42;96m";
 const RESET_SGR = "\x1b[39m";
 let carry = "";
+let ready = false;
 function inkify(chunk: string): string {
   let s = carry + chunk;
   carry = "";
@@ -89,8 +93,10 @@ function inkify(chunk: string): string {
   if (tail !== -1 && isPartialEscape(s.slice(tail))) {
     carry = s.slice(tail); s = s.slice(0, tail);
   }
-  s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) =>
-    m === "A" ? INK_SGR : m === "C" ? RESET_SGR : "");
+  s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) => {
+    if (m === "A") ready = true;
+    return m === "A" ? INK_SGR : m === "C" ? RESET_SGR : "";
+  });
   return s.replace(/\x1b\[([0-9;]*)m/g, remapSgr);
 }
 

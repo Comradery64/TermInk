@@ -11,3 +11,7 @@ add-zsh-hook preexec __termpaper_preexec
 # A = prompt start, B = command input start. Both live inside PS1 so zsh's own
 # SGR reset (emitted between precmd and the prompt) cannot cancel the ink.
 PS1="%{$(printf '\e]133;A\a')%}${PS1}%{$(printf '\e]133;B\a')%}"
+
+# zsh paints pasted/yanked text in standout until the next key (Cmd+V and
+# Ctrl+Y both count as paste); on paper that looks like a stray highlighter mark.
+zle_highlight=("${(@)zle_highlight:#paste:*}" paste:none)
