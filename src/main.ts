@@ -135,11 +135,20 @@ function fitPage() {
   screen.style.transform = `translate(${Math.floor(dx)}px, ${Math.floor(dy)}px)`;
 }
 
+/**
+ * Load every face of a family up front. Bold and italic otherwise load lazily the
+ * first time text uses them, and until then that text is invisible, so a TUI that
+ * repaints bold or italic blinks for its first several frames. A missing face must
+ * never stop the shell, so failures are swallowed.
+ */
+const loadFaces = (family: string) => Promise.all(["", "bold ", "italic ", "italic bold "].map((v) =>
+  document.fonts.load(`${v}15px "${family}"`).catch(() => [])));
+
 /** Push settings into xterm, the page layout and the panel engine. */
 function apply(v: Values, key?: string) {
   if (key === "font") {
     // wait for the face before measuring, or the cell grid is sized for the fallback
-    document.fonts.load(`15px "${v.font}"`).then(() => {
+    loadFaces(String(v.font)).then(() => {
       term.options.fontFamily = `"${v.font}", monospace`;
       fitPage(); panel.fullRefresh();
     });
@@ -165,7 +174,7 @@ function apply(v: Values, key?: string) {
 async function main() {
   apply(S);
   // a missing font must never stop the shell: fall back and carry on
-  await document.fonts.load(`15px "${S.font}"`).catch((e) => console.warn("font load failed", e));
+  await loadFaces(String(S.font));
   // DOM renderer on purpose: glyphs are real text, so the panel's grain,
   // ghosts and refresh flashes are plain CSS over them.
   term.open(el);
