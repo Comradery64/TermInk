@@ -71,6 +71,13 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   let timer = 0;
   let lastFlush = 0;
   let snapshot: string | null = null;   // screen before the pending flush, for ghosting
+  let snapText: string[] = [];           // and its visible text, to measure what really changed
+  // visible lines as text, straight from the buffer
+  const lines = () => {
+    const b = term.buffer.active, out: string[] = [];
+    for (let i = 0; i < term.rows; i++) out.push(b.getLine(b.viewportY + i)?.translateToString(true) ?? "");
+    return out;
+  };
   let large = 0;
   let a2Timer = 0;
   let sleeping = false;
@@ -181,7 +188,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     if (sleeping || !queue) return;
     const q = queue; queue = "";
     lastFlush = performance.now();
-    snapshot = rows().innerHTML;
+    snapshot = rows().innerHTML; snapText = lines();
     flushBytes = q.length;
     if (q.length > A2_BYTES) a2(true);
     term.write(q);
@@ -208,7 +215,14 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     const snap = snapshot; snapshot = null;
     if (performance.now() < quietUntil) return;
     if (snap === null) return;              // cursor/selection repaint: the panel leaves it alone
-    const n = end - start + 1;
+    // Size the update by lines whose text actually changed, not by what xterm repainted:
+    // TUIs (Claude Code, anything built on Ink) repaint their whole frame on a timer even
+    // when nothing moved, and a repaint that changes nothing must not touch the panel.
+    const now_ = lines();
+    const changed = now_.flatMap((l, i) => (l !== snapText[i] ? [i] : []));
+    if (!changed.length) { sawClear = false; return; }
+    start = changed[0]; end = changed[changed.length - 1];
+    const n = changed.length;
     const now = performance.now();
     // Interaction (typing, a TUI redrawing as you type, streaming output) runs in DU:
     // drawn in place with no flash, the way a reader behaves while you are using it.
@@ -229,7 +243,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   //  - GC flashing: most of the screen changed; inverted flash, and the old page ghosts
   function classify(start: number, end: number, n: number, snap: string) {
     if (sawClear) { sawClear = false; fullRefresh(); return; }
-    if (n <= 2 && flushBytes < 160) return;
+    if (n <= 2) return;                     // a line or two (prompt, spinner, clock): DU, in place
     if (n < term.rows * 0.4) { settle(start, end); return; }
     ghost(snap);
     if (++large >= FULL_REFRESH_EVERY) { fullRefresh(); return; }
@@ -314,7 +328,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     const b = term.buffer.active;
     if ((dir < 0 && b.viewportY === 0) || (dir > 0 && b.viewportY >= b.baseY)) return;
     wheelLock = performance.now() + 350;    // one page per flick, like a page-turn button
-    snapshot = rows().innerHTML;
+    snapshot = rows().innerHTML; snapText = lines();
     term.scrollPages(dir);
   }, { capture: true, passive: false });
 
