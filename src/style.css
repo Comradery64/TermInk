@@ -52,7 +52,7 @@ html, body { background: var(--bezel); }
     var(--bezel);
 }
 #bezel .mark {
-  position: absolute; left: 0; right: 0; bottom: 17px;
+  position: absolute; left: 0; right: 0; bottom: calc((var(--bezel-w) + var(--chin)) / 2 - 5px);
   text-align: center;
   font: 600 11px/1 "Monaspace Xenon", monospace;
   letter-spacing: 0.42em;
@@ -65,10 +65,10 @@ html, body { background: var(--bezel); }
 /* ---- the screen, recessed into the bezel ---- */
 #sheet {
   position: absolute;
-  inset: 34px 26px 50px 26px;
+  inset: var(--bezel-w) var(--bezel-w) calc(var(--bezel-w) + var(--chin)) var(--bezel-w);
   height: auto;
   z-index: 1;
-  padding: 36px 30px 34px 32px;
+  padding: var(--m);
   background: var(--page);
   /* a hairline gap between glass and plastic */
   box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 1px 0 1px rgba(255,255,255,0.04);
@@ -178,7 +178,7 @@ html, body { background: var(--bezel); }
 /* ---- status bar and reading progress ---- */
 #status, #footer {
   display: flex; align-items: center; gap: 14px;
-  position: absolute; left: 32px; right: 30px; z-index: 1;
+  position: absolute; left: var(--m); right: var(--m); z-index: 1;
   font: 400 10.5px/1 "Monaspace Xenon", monospace;
   letter-spacing: 0.04em;
   color: var(--ink-3);
@@ -255,38 +255,61 @@ html, body { background: var(--bezel); }
 #status .off, #footer .off { display: none !important; }
 #status .right { margin-left: auto; }
 #sheet.no-status #status, #sheet.no-footer #footer { display: none; }
-#sheet.no-status { padding-top: 16px; }
-#sheet.no-footer { padding-bottom: 14px; }
+#sheet:not(.no-status) { padding-top: calc(24px + var(--m) / 2); }
+#sheet:not(.no-footer) { padding-bottom: calc(24px + var(--m) / 2); }
+#bezel.no-mark .mark { display: none; }
+:root { --bezel-w: 30px; --chin: 0px; --m: 30px; }
 
 /* ---- settings: an e-reader menu page, flat ink on the panel ---- */
 #sheet.prefs #settings {
   display: block;
   position: absolute; inset: 0; z-index: 6;
-  padding: 40px 44px;
+  padding: 34px 44px 40px;
   background: var(--page);
   color: var(--ink);
   font: 400 13px/1.4 "Monaspace Xenon", monospace;
   overflow: auto;
 }
+#settings .settings { max-width: 560px; margin: 0 auto; }
 #settings h1 {
-  margin: 0 0 22px; padding-bottom: 10px;
+  margin: 0 0 18px; padding-bottom: 10px;
   font-size: 20px; font-weight: 700; letter-spacing: 0.08em;
   border-bottom: 2px solid var(--ink);
 }
-#settings section { margin-bottom: 22px; }
-#settings label { display: flex; align-items: center; gap: 12px; padding: 7px 0 7px 26px; cursor: pointer; }
-#settings label.head {
-  padding-left: 0; font-weight: 700; letter-spacing: 0.04em;
+#settings h2 {
+  margin: 0; padding: 6px 0;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
   border-bottom: 1px solid rgba(22,22,21,0.35);
 }
-/* square ink checkboxes: an empty box, filled solid when on */
-#settings input {
+#settings section { margin-bottom: 20px; }
+#settings .row { display: flex; align-items: center; gap: 12px; min-height: 32px; cursor: pointer; }
+#settings .row.child { padding-left: 26px; }
+#settings .row.disabled { opacity: 0.4; cursor: default; }
+#settings .row.range > span, #settings .row.select > span:first-child { flex: 1; }
+#settings output { width: 7em; text-align: right; font-variant-numeric: tabular-nums; }
+/* square ink checkbox: empty box, filled solid when on */
+#settings input[type="checkbox"] {
   appearance: none; -webkit-appearance: none; margin: 0;
   width: 14px; height: 14px;
   border: 1.5px solid var(--ink);
   background: var(--page);
   box-shadow: inset 0 0 0 2px var(--page);
 }
-#settings input:checked { background: var(--ink); }
-#settings input:disabled, #settings input:disabled + span { opacity: 0.4; }
-#settings .keys { margin-top: 30px; font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+#settings input[type="checkbox"]:checked { background: var(--ink); }
+/* slider: a hairline track and a square ink thumb */
+#settings input[type="range"] { -webkit-appearance: none; appearance: none; width: 180px; height: 14px; background: none; margin: 0; }
+#settings input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
+#settings input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 14px; margin-top: -6px;
+  background: var(--ink); border: 2px solid var(--page); outline: 1px solid var(--ink);
+}
+/* segmented choice: inverted when selected, the reader idiom */
+#settings .seg { display: inline-flex; border: 1.5px solid var(--ink); }
+#settings button {
+  font: inherit; color: var(--ink); background: var(--page);
+  border: 0; padding: 4px 11px; cursor: pointer;
+}
+#settings .seg button + button { border-left: 1.5px solid var(--ink); }
+#settings .seg button.on { background: var(--ink); color: var(--page); }
+#settings .reset { border: 1.5px solid var(--ink); margin-top: 6px; }
+#settings .reset:active { background: var(--ink); color: var(--page); }

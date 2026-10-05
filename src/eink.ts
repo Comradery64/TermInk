@@ -14,25 +14,57 @@ import { invoke } from "@tauri-apps/api/core";
  *  - unfocused for a minute, the panel sleeps on a screensaver and holds it
  */
 
+import type { Section, Values } from "./settings";
+
 // a cold panel (late night) drives its particles slower and ghosts harder
 const hour = new Date().getHours();
 const COLD = hour < 7 || hour >= 23;
-const FRAME_MS = COLD ? 220 : 130;
-const GHOST_OPACITY = COLD ? 0.11 : 0.075;
 const GHOSTS_MAX = 3;
-const FULL_REFRESH_EVERY = 6;    // large partial refreshes between full flashes
 const A2_BYTES = 2500;           // a single frame this big means a flood: fast waveform
-const SLEEP_AFTER_MS = 60_000;
+
+/** TermInk's own settings, shown after the shared ones. */
+export const PANEL_SECTIONS: Section[] = [
+  { title: "Status bar", fields: [
+    { key: "status", label: "Show status bar", type: "toggle", default: true },
+    { key: "brand", label: "Name", type: "toggle", default: true, parent: "status" },
+    { key: "title", label: "Window title", type: "toggle", default: true, parent: "status" },
+    { key: "cold", label: "Cold-panel mark", type: "toggle", default: true, parent: "status" },
+    { key: "clock", label: "Clock", type: "toggle", default: true, parent: "status" },
+    { key: "battery", label: "Battery", type: "toggle", default: true, parent: "status" },
+  ] },
+  { title: "Footer", fields: [
+    { key: "footer", label: "Show footer", type: "toggle", default: false },
+    { key: "page", label: "Page number", type: "toggle", default: true, parent: "footer" },
+    { key: "track", label: "Progress line", type: "toggle", default: true, parent: "footer" },
+    { key: "percent", label: "Percent", type: "toggle", default: true, parent: "footer" },
+  ] },
+  { title: "Bezel", fields: [
+    { key: "bezel", label: "Bezel width", type: "range", default: 30, min: 0, max: 80, step: 2, unit: "px" },
+    { key: "chin", label: "Chin", type: "toggle", default: false },
+    { key: "chinSize", label: "Chin size", type: "range", default: 40, min: 8, max: 120, step: 2, unit: "px", parent: "chin" },
+    { key: "wordmark", label: "Wordmark", type: "toggle", default: true },
+  ] },
+  { title: "Panel", fields: [
+    { key: "mode", label: "Panel", type: "select", default: "eink", options: [["eink", "Carta grey"], ["kaleido", "Kaleido color"]] },
+    { key: "light", label: "Front light", type: "select", default: "off", options: [["off", "Off"], ["cool", "Cool"], ["warm", "Warm"]] },
+    { key: "frame", label: "Refresh interval", type: "range", default: 130, min: 16, max: 400, step: 2, unit: " ms" },
+    { key: "ghost", label: "Ghosting", type: "range", default: 0.075, min: 0, max: 0.25, step: 0.005 },
+    { key: "fullEvery", label: "Full refresh every", type: "range", default: 6, min: 1, max: 30, step: 1, unit: " pages" },
+    { key: "sleep", label: "Sleep after unfocused", type: "range", default: 60, min: 0, max: 900, step: 15, unit: " s" },
+  ] },
+];
 
 export interface Panel {
   write(s: string): void;
   enable(on: boolean): void;
   fullRefresh(): void;
-  cycleLight(): void;
+  configure(v: Values): void;
   toggleSettings(): void;
 }
 
-export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
+export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLElement): Panel {
+  // live config from settings; a cold panel stretches the frame and deepens ghosts
+  let FRAME_MS = 130, GHOST_OPACITY = 0.075, FULL_REFRESH_EVERY = 6, SLEEP_AFTER_MS = 60_000;
   let on = false;
   let queue = "";
   let timer = 0;
@@ -63,45 +95,28 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   bezel.setAttribute("data-tauri-drag-region", "");
   bezel.innerHTML = `<span class="mark">termink</span>`;
 
-  // ---- settings: what the status bar and footer show ----
-  const DEFAULTS = {
-    status: true, brand: true, title: true, cold: true, clock: true, battery: true,
-    footer: false, page: true, track: true, percent: true,
-  };
-  type Key = keyof typeof DEFAULTS;
-  const SECTIONS: [string, Key, [Key, string, string][]][] = [
-    ["Status bar", "status", [
-      ["brand", ".brand", "Name"], ["title", ".title", "Window title"], ["cold", ".cold", "Cold-panel mark"],
-      ["clock", ".clock", "Clock"], ["battery", ".batt, .pct", "Battery"],
-    ]],
-    ["Footer", "footer", [
-      ["page", ".page", "Page number"], ["track", ".track", "Progress line"], ["percent", ".pctr", "Percent"],
-    ]],
-  ];
-  let settings: Record<Key, boolean> = { ...DEFAULTS, ...JSON.parse(localStorage.getItem("settings") ?? "{}") };
+  // ---- settings ----
   const prefs = mk("settings");
-  prefs.innerHTML = `<h1>Settings</h1>` + SECTIONS.map(([name, key, items]) =>
-    `<section><label class="head"><input type="checkbox" data-k="${key}"><span>${name}</span></label>`
-    + items.map(([k, , label]) => `<label><input type="checkbox" data-k="${k}"><span>${label}</span></label>`).join("")
-    + `</section>`).join("")
-    + `<p class="keys">Cmd+Shift+L front light · Cmd+Shift+K Kaleido color · Cmd+, close</p>`;
-  prefs.addEventListener("change", (e) => {
-    const k = (e.target as HTMLInputElement).dataset.k as Key;
-    settings[k] = (e.target as HTMLInputElement).checked;
-    localStorage.setItem("settings", JSON.stringify(settings));
-    applySettings();
-  });
-  function applySettings() {
-    for (const [, key, items] of SECTIONS) {
-      const bar = key === "status" ? status : footer;
-      sheet.classList.toggle(`no-${key}`, !settings[key]);
-      for (const [k, sel] of items) {
-        bar.querySelectorAll<HTMLElement>(sel).forEach((e) => e.classList.toggle("off", !settings[k]));
-        const box = prefs.querySelector<HTMLInputElement>(`[data-k="${k}"]`)!;
-        box.checked = settings[k]; box.disabled = !settings[key];
-      }
-      prefs.querySelector<HTMLInputElement>(`[data-k="${key}"]`)!.checked = settings[key];
-    }
+  prefs.append(prefsPage);
+  const BAR_ITEMS: [string, string][] = [
+    ["brand", ".brand"], ["title", ".title"], ["cold", ".cold"], ["clock", ".clock"], ["battery", ".batt, .pct"],
+    ["page", ".page"], ["track", ".track"], ["percent", ".pctr"],
+  ];
+  function configure(v: Values) {
+    const cold = COLD ? 1.7 : 1;
+    FRAME_MS = Number(v.frame) * cold;
+    GHOST_OPACITY = Math.min(0.35, Number(v.ghost) * (COLD ? 1.5 : 1));
+    FULL_REFRESH_EVERY = Number(v.fullEvery);
+    SLEEP_AFTER_MS = Number(v.sleep) * 1000;
+    sheet.classList.toggle("no-status", !v.status);
+    sheet.classList.toggle("no-footer", !v.footer);
+    for (const [k, sel] of BAR_ITEMS)
+      sheet.querySelectorAll<HTMLElement>(sel).forEach((e) => e.classList.toggle("off", !v[k]));
+    if (sheet.dataset.light !== v.light) sheet.dataset.light = String(v.light);
+    const root = document.documentElement.style;
+    root.setProperty("--bezel-w", `${v.bezel}px`);
+    root.setProperty("--chin", v.chin ? `${v.chinSize}px` : "0px");
+    bezel.classList.toggle("no-mark", !v.wordmark);
   }
   // opening and closing a menu is a full refresh on a reader
   function toggleSettings() {
@@ -134,7 +149,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
       status.querySelector(".pct")!.textContent = `${pct}%`;
     } catch { status.querySelector(".batt")!.remove(); }
   };
-  tick(); battery(); applySettings();
+  tick(); battery();
   setTimeout(() => { tick(); setInterval(tick, 60_000); }, 60_000 - (Date.now() % 60_000));
   setInterval(battery, 120_000);
 
@@ -292,6 +307,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   // ---- sleep: the panel holds its last image without power ----
   addEventListener("blur", () => {
     clearTimeout(sleepTimer);
+    if (!SLEEP_AFTER_MS) return;          // sleep set to 0: never
     sleepTimer = window.setTimeout(() => {
       if (!on) return;
       fullRefresh();
@@ -308,15 +324,6 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   };
   addEventListener("focus", wake);
   sleep.addEventListener("mousedown", wake);
-
-  // ---- front light: off -> cool -> warm ----
-  function cycleLight() {
-    const order = ["off", "cool", "warm"];
-    const cur = sheet.dataset.light ?? "off";
-    sheet.dataset.light = order[(order.indexOf(cur) + 1) % order.length];
-    localStorage.setItem("light", sheet.dataset.light);
-  }
-  sheet.dataset.light = localStorage.getItem("light") ?? "off";
 
   // ---- SVG filters: eaten ink edges, and the hard two-level A2 waveform ----
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -348,5 +355,5 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
     } else progress();
   }
 
-  return { write, enable, fullRefresh, cycleLight, toggleSettings };
+  return { write, enable, fullRefresh, configure, toggleSettings };
 }

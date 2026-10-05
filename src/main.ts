@@ -2,7 +2,8 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
-import { createPanel } from "./eink";
+import { createPanel, PANEL_SECTIONS } from "./eink";
+import { createSettings, CORE, type Values } from "./settings";
 
 
 /**
@@ -68,27 +69,48 @@ const panelTheme = (map: (r: number, g: number, b: number) => RGB) => ({
 });
 const THEMES = { eink: panelTheme(einkFg), kaleido: panelTheme(kaleidoFg) };
 const INPUT_SGR = `\x1b[38;2;${level(0).join(";")}m`;   // typed commands: full black; output one level up
-let mode: Mode = localStorage.getItem("mode") === "kaleido" ? "kaleido" : "eink";
+const settings = createSettings([...CORE, ...PANEL_SECTIONS], "termink.settings", apply);
+const S = settings.values;
 
 const term = new Terminal({
   fontFamily: '"Monaspace Xenon", monospace',
-  fontSize: 15,
-  lineHeight: 1.4,
+  fontSize: Number(S.fontSize),
+  lineHeight: Number(S.lineHeight),
   allowTransparency: true,
-  // the panel cannot blink without a refresh flicker; readers show a steady block
+  // the panel cannot blink without a refresh flicker; readers show a steady cursor
   cursorBlink: false,
-  cursorStyle: "block",
-  scrollback: 5000,
-  theme: THEMES[mode],
+  cursorStyle: S.cursor as "block" | "bar" | "underline",
+  macOptionIsMeta: !!S.optionMeta,
+  scrollback: Number(S.scrollback),
+  theme: THEMES[S.mode as Mode],
 });
 
 const fit = new FitAddon();
 term.loadAddon(fit);
 const el = document.getElementById("term")!;
-const panel = createPanel(term, document.getElementById("sheet")!);
+const panel = createPanel(term, document.getElementById("sheet")!, settings.el);
+
+/** Push settings into xterm, the page layout and the panel engine. */
+function apply(v: Values, key?: string) {
+  const reflow = !key || ["fontSize", "lineHeight", "margin", "bezel", "chin", "chinSize", "status", "footer"].includes(key);
+  Object.assign(term.options, {
+    fontSize: Number(v.fontSize),
+    lineHeight: Number(v.lineHeight),
+    cursorStyle: v.cursor,
+    macOptionIsMeta: !!v.optionMeta,
+    scrollback: Number(v.scrollback),
+    theme: THEMES[v.mode as Mode],
+  });
+  document.documentElement.dataset.mode = String(v.mode);
+  document.documentElement.style.setProperty("--m", `${v.margin}px`);
+  panel.configure(v);
+  if (reflow && term.element) fit.fit();
+  if (key === "mode" || key === "light") panel.fullRefresh();
+}
+
 
 async function main() {
-  document.documentElement.dataset.mode = mode;
+  apply(S);
   await document.fonts.load('15px "Monaspace Xenon"');
   // DOM renderer on purpose: glyphs are real text, so the panel's grain,
   // ghosts and refresh flashes are plain CSS over them.
@@ -132,29 +154,20 @@ function watchTrafficLights() {
   invoke("traffic_lights", { visible: false, duration: 0 }); shown = false;
 }
 
-/** Switch between the greyscale panel and the Kaleido color panel; persists. */
-function toggleKaleido() {
-  mode = mode === "eink" ? "kaleido" : "eink";
-  localStorage.setItem("mode", mode);
-  document.documentElement.dataset.mode = mode;
-  term.options.theme = THEMES[mode];
-  panel.fullRefresh();
-}
-
 /**
- * Cmd/Ctrl +/-/0 change font size, Cmd/Ctrl+Shift+K toggles Kaleido color,
- * Cmd/Ctrl+Shift+L cycles the front light, Cmd/Ctrl+, opens settings;
- * everything else passes to xterm.
+ * Cmd/Ctrl +/-/0 change font size (saved to settings), Cmd/Ctrl+Shift+K toggles
+ * Kaleido color, Cmd/Ctrl+Shift+L cycles the front light, Cmd/Ctrl+, opens
+ * settings; everything else passes to xterm.
  */
 function keys(e: KeyboardEvent): boolean {
   if (e.type !== "keydown" || !(e.metaKey || e.ctrlKey)) return true;
-  if (e.shiftKey && e.code === "KeyK") { toggleKaleido(); return false; }
-  if (e.shiftKey && e.code === "KeyL") { panel.cycleLight(); return false; }
+  const cycle = (k: string, order: string[]) => settings.set(k, order[(order.indexOf(String(S[k])) + 1) % order.length]);
+  if (e.shiftKey && e.code === "KeyK") { cycle("mode", ["eink", "kaleido"]); return false; }
+  if (e.shiftKey && e.code === "KeyL") { cycle("light", ["off", "cool", "warm"]); return false; }
   if (!e.shiftKey && e.key === ",") { panel.toggleSettings(); return false; }
   const step = e.key === "=" || e.key === "+" ? 1 : e.key === "-" ? -1 : e.key === "0" ? 0 : null;
   if (step === null) return true;
-  term.options.fontSize = step === 0 ? 15 : Math.min(32, Math.max(9, term.options.fontSize! + step));
-  fit.fit();
+  settings.set("fontSize", step === 0 ? 15 : Math.min(32, Math.max(9, Number(S.fontSize) + step)));
   panel.fullRefresh();     // zoom reflows the whole page, history included
   return false;
 }
@@ -196,7 +209,7 @@ function isPartialEscape(t: string): boolean {
  */
 function remapSgr(seq: string, params: string): string {
   if (!/(^|;)(38|48)(;|$)/.test(params)) return seq;
-  const k = mode === "kaleido";
+  const k = S.mode === "kaleido";
   const p = params.split(";");
   const out: string[] = [];
   for (let i = 0; i < p.length; i++) {
