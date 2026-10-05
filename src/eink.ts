@@ -171,6 +171,9 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
     term.write(q);
   }
   let flushBytes = 0;
+  let quietUntil = 0;
+  // a new font size or window size reflows every line: the reader redraws the whole page
+  term.onResize(() => fullRefresh());
 
   function a2(enter: boolean) {
     clearTimeout(a2Timer);
@@ -186,6 +189,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
     progress();
     handles();
     const snap = snapshot; snapshot = null;
+    if (performance.now() < quietUntil) return;
     if (snap === null) return;              // cursor/selection repaint: the panel leaves it alone
     const n = end - start + 1;
     // Three waveforms, picked the way an e-reader's controller picks them:
@@ -238,6 +242,9 @@ export function createPanel(term: Terminal, sheet: HTMLElement): Panel {
   function fullRefresh() {
     if (!on) return;
     large = 0;
+    // the full refresh repaints everything; redraws landing right after it (the shell
+    // answering a resize) are already on the page, so they must not flash again
+    quietUntil = performance.now() + 450;
     screen()?.querySelectorAll(".eink-ghost").forEach((e) => e.remove());
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     sheet.classList.remove("refresh");

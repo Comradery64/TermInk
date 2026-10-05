@@ -155,6 +155,7 @@ function keys(e: KeyboardEvent): boolean {
   if (step === null) return true;
   term.options.fontSize = step === 0 ? 15 : Math.min(32, Math.max(9, term.options.fontSize! + step));
   fit.fit();
+  panel.fullRefresh();     // zoom reflows the whole page, history included
   return false;
 }
 
