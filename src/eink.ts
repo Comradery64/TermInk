@@ -24,8 +24,8 @@ const A2_BYTES = 2500;           // a single frame this big means a flood: fast 
 
 /** TermInk's own settings, shown after the shared ones. */
 export const PANEL_SECTIONS: Section[] = [
-  { title: "Status bar", fields: [
-    { key: "status", label: "Show status bar", type: "toggle", default: true },
+  { title: "Title bar", fields: [
+    { key: "status", label: "Show title bar", type: "toggle", default: true },
     { key: "brand", label: "Name", type: "toggle", default: true, parent: "status" },
     { key: "title", label: "Window title", type: "toggle", default: true, parent: "status" },
     { key: "cold", label: "Cold-panel mark", type: "toggle", default: true, parent: "status" },
