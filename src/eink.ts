@@ -250,7 +250,8 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     lastFlush = performance.now();
     snapshot = rows().innerHTML; snapText = lines();
     flushBytes = q.length;
-    if (q.length > A2_BYTES) a2(true);
+    // floods of scrolling output only: a full-screen app repainting is a live view, not a flood
+    if (q.length > A2_BYTES && term.buffer.active.type === "normal") a2(true);
     term.write(q);
   }
   let flushBytes = 0;
@@ -460,8 +461,8 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     <filter id="eink-a2">
       <feColorMatrix type="saturate" values="0"/>
       <feComponentTransfer>
-        <feFuncR type="discrete" tableValues="0 0 1"/><feFuncG type="discrete" tableValues="0 0 1"/>
-        <feFuncB type="discrete" tableValues="0 0 1"/><feFuncA type="discrete" tableValues="0 1 1"/>
+        <feFuncR type="discrete" tableValues="0 1"/><feFuncG type="discrete" tableValues="0 1"/>
+        <feFuncB type="discrete" tableValues="0 1"/><feFuncA type="discrete" tableValues="0 1 1"/>
       </feComponentTransfer>
     </filter>`;
   document.body.append(svg);
