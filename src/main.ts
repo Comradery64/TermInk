@@ -8,30 +8,97 @@ const USE_WEBGL = false;
 const INK = "rgba(28, 42, 96, 0.88)";       // fountain-pen blue
 const GRAPHITE = "rgba(36, 38, 46, 0.94)";  // system text: prompt + output
 
-const term = new Terminal({
-  fontFamily: '"Monaspace Radon", monospace',
-  fontSize: 15,
-  lineHeight: 1.6,
-  allowTransparency: true,
-  cursorBlink: true,
-  cursorStyle: "bar",
-  scrollback: 5000,
-  theme: {
-    background: "rgba(0,0,0,0)",
-    foreground: GRAPHITE,
-    cursor: INK,
-    selectionBackground: "#c8e2f5",
-    selectionInactiveBackground: "#dde9f3",
-    // ink palette for a light page: every color dark enough to read on paper
-    black: GRAPHITE,        brightBlack: "#5a5e6a",
-    red: "#b3261e",         brightRed: "#c62828",
-    green: "#2e7d32",       brightGreen: "#1b7f3b",
-    yellow: "#8a6d00",      brightYellow: "#946f00",
-    blue: INK,              brightBlue: INK,
-    magenta: "#7b3f8c",     brightMagenta: "#8e3f9e",
-    cyan: "#0e6e7c",        brightCyan: "#0f7f90",
-    white: "#6b6f7b",       brightWhite: "#3a3d47",
+/**
+ * E-ink: a 4-bit greyscale panel (16 levels, as on Carta displays), lerped
+ * from pigment black to the unlit page. Neither end is pure: the black
+ * particles still reflect a few percent, and the white ones read as warm grey.
+ */
+type RGB = [number, number, number];
+const EINK_PAGE: RGB = [226, 225, 219];
+const EINK_INK: RGB = [22, 22, 21];
+function level(n: number): RGB {
+  const t = Math.max(0, Math.min(15, Math.round(n))) / 15;
+  return EINK_INK.map((v, i) => Math.round(v + (EINK_PAGE[i] - v) * t)) as RGB;
+}
+const grey = (n: number) => `#${level(n).map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+const luma = (r: number, g: number, b: number) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+// text is never lighter than level 9, so every color stays readable
+const einkFg = (r: number, g: number, b: number) => level(luma(r, g, b) * 9);
+// backgrounds stay in the light half: a dark-terminal app's panel becomes a pale tint
+const einkBg = (r: number, g: number, b: number) => level(11 + luma(r, g, b) * 4);
+// the ANSI 16 as a typical terminal draws them, shown through the panel
+const ANSI: [string, string][] = [
+  ["black", "#000000"], ["red", "#cd3131"], ["green", "#0dbc79"], ["yellow", "#e5e510"],
+  ["blue", "#2472c8"], ["magenta", "#bc3fbc"], ["cyan", "#11a8cd"], ["white", "#e5e5e5"],
+  ["brightBlack", "#666666"], ["brightRed", "#f14c4c"], ["brightGreen", "#23d18b"], ["brightYellow", "#f5f543"],
+  ["brightBlue", "#3b8eea"], ["brightMagenta", "#d670d6"], ["brightCyan", "#29b8db"], ["brightWhite", "#ffffff"],
+];
+const toGrey = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return `rgb(${einkFg(r, g, b).join(",")})`;
+};
+
+type ThemeName = "paper" | "eink";
+const THEMES = {
+  paper: {
+    font: "Monaspace Radon",
+    lineHeight: 1.6,
+    cursorBlink: true,
+    cursorStyle: "bar" as const,
+    input: [28, 42, 96] as RGB,   // typed commands: blue ink
+    theme: {
+      background: "rgba(0,0,0,0)",
+      foreground: GRAPHITE,
+      cursor: INK,
+      selectionBackground: "#c8e2f5",
+      selectionInactiveBackground: "#dde9f3",
+      // ink palette for a light page: every color dark enough to read on paper
+      black: GRAPHITE,        brightBlack: "#5a5e6a",
+      red: "#b3261e",         brightRed: "#c62828",
+      green: "#2e7d32",       brightGreen: "#1b7f3b",
+      yellow: "#8a6d00",      brightYellow: "#946f00",
+      blue: INK,              brightBlue: INK,
+      magenta: "#7b3f8c",     brightMagenta: "#8e3f9e",
+      cyan: "#0e6e7c",        brightCyan: "#0f7f90",
+      white: "#6b6f7b",       brightWhite: "#3a3d47",
+    },
   },
+  eink: {
+    font: "Monaspace Xenon",
+    lineHeight: 1.4,
+    // the panel cannot blink without a refresh flicker; readers show a steady block
+    cursorBlink: false,
+    cursorStyle: "block" as const,
+    input: level(0),              // typed commands: full black; output one level up
+    theme: {
+      // opaque, so SGR 7 inverse is a true black block, as on the panel
+      background: grey(15),
+      foreground: grey(1),
+      cursor: grey(0),
+      cursorAccent: grey(15),
+      // selection inverts: the e-reader highlight idiom
+      selectionBackground: grey(0),
+      selectionForeground: grey(15),
+      selectionInactiveBackground: grey(10),
+      ...Object.fromEntries(ANSI.map(([k, hex]) => [k, toGrey(hex)])),
+      black: grey(0),
+      white: grey(9),
+      brightWhite: grey(3),
+    },
+  },
+};
+let themeName: ThemeName = localStorage.getItem("theme") === "paper" ? "paper" : "eink";
+const T = () => THEMES[themeName];
+
+const term = new Terminal({
+  fontFamily: `"${T().font}", monospace`,
+  fontSize: 15,
+  lineHeight: T().lineHeight,
+  allowTransparency: true,
+  cursorBlink: T().cursorBlink,
+  cursorStyle: T().cursorStyle,
+  scrollback: 5000,
+  theme: T().theme,
 });
 
 const fit = new FitAddon();
@@ -39,7 +106,8 @@ term.loadAddon(fit);
 const el = document.getElementById("term")!;
 
 async function main() {
-  await document.fonts.load('15px "Monaspace Radon"');
+  document.documentElement.dataset.theme = themeName;
+  await document.fonts.load(`15px "${T().font}"`);
   term.open(el);
   // DOM renderer on purpose: glyphs are real text, so the ink-on-paper
   // shadows are plain CSS. WebKit drops CSS filters on the WebGL canvas layer.
@@ -85,9 +153,45 @@ function watchTrafficLights() {
   invoke("traffic_lights", { visible: false, duration: 0 }); shown = false;
 }
 
-/** Cmd/Ctrl +/-/0 change font size; everything else passes to xterm. */
+/** Switch between the paper and e-ink looks; persists across launches. */
+async function setTheme(name: ThemeName) {
+  themeName = name;
+  localStorage.setItem("theme", name);
+  document.documentElement.dataset.theme = name;
+  await document.fonts.load(`15px "${T().font}"`);
+  Object.assign(term.options, {
+    fontFamily: `"${T().font}", monospace`,
+    lineHeight: T().lineHeight,
+    cursorBlink: T().cursorBlink,
+    cursorStyle: T().cursorStyle,
+    theme: T().theme,
+  });
+  fit.fit(); applyRuling();
+  if (name === "eink") refreshPanel();
+}
+
+/**
+ * E-ink full refresh: the panel drives every pixel black, then white, then
+ * draws the page. No easing anywhere; the particles do not fade, they flip.
+ */
+function refreshPanel() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const sheet = document.getElementById("sheet")!;
+  sheet.classList.remove("refresh");
+  void sheet.offsetWidth;   // restart the animation if one is running
+  sheet.classList.add("refresh");
+}
+
+/**
+ * Cmd/Ctrl +/-/0 change font size, Cmd/Ctrl+Shift+E toggles e-ink;
+ * everything else passes to xterm.
+ */
 function zoomKeys(e: KeyboardEvent): boolean {
   if (e.type !== "keydown" || !(e.metaKey || e.ctrlKey)) return true;
+  if (e.shiftKey && e.code === "KeyE") {
+    setTheme(themeName === "eink" ? "paper" : "eink");
+    return false;
+  }
   const step = e.key === "=" || e.key === "+" ? 1 : e.key === "-" ? -1 : e.key === "0" ? 0 : null;
   if (step === null) return true;
   term.options.fontSize = step === 0 ? 15 : Math.min(32, Math.max(9, term.options.fontSize! + step));
@@ -97,10 +201,9 @@ function zoomKeys(e: KeyboardEvent): boolean {
 
 /**
  * Turn OSC 133 shell-integration marks into ink colors:
- * A (prompt start) -> graphite, B (command input) -> blue ink, C (output start) -> graphite.
+ * A (prompt start) -> system text, B (command input) -> input ink, C (output start) -> system text.
  * A sequence may be split across chunks, so hold back a trailing partial ESC.
  */
-const INK_SGR = "\x1b[38;2;28;42;96m";
 const RESET_SGR = "\x1b[39m";
 let carry = "";
 let ready = false;
@@ -111,9 +214,11 @@ function inkify(chunk: string): string {
   if (tail !== -1 && isPartialEscape(s.slice(tail))) {
     carry = s.slice(tail); s = s.slice(0, tail);
   }
+  // e-ink: clearing the screen is a full panel refresh
+  if (themeName === "eink" && /\x1b\[[23]J|\x1bc/.test(s)) refreshPanel();
   s = s.replace(/\x1b\]133;([ABCD])(?:;[^\x07\x1b]*)?(?:\x07|\x1b\\)/g, (_, m) => {
     if (m === "A") ready = true;
-    return m === "B" ? INK_SGR : m === "A" || m === "C" ? RESET_SGR : "";
+    return m === "B" ? `\x1b[38;2;${T().input.join(";")}m` : m === "A" || m === "C" ? RESET_SGR : "";
   });
   return s.replace(/\x1b\[([0-9;]*)m/g, remapSgr);
 }
@@ -128,30 +233,35 @@ function isPartialEscape(t: string): boolean {
 
 /**
  * Rewrite SGR sequences for a light page:
- *  - 7/27 (inverse): the canvas background is transparent, so inverse would
- *    paint letters transparent and the cell in ink. Use a highlighter instead.
+ *  - 7/27 (inverse), paper only: the canvas background is transparent, so inverse
+ *    would paint letters transparent and the cell in ink. Use a highlighter instead.
+ *    E-ink has an opaque page, so it keeps the true inverse block.
  *  - 38;5;n and 38;2;r;g;b foregrounds: apps pick these for dark terminals;
- *    clamp their luminance so pale yellows/cyans stay legible on paper.
+ *    paper clamps their luminance so pale yellows/cyans stay legible,
+ *    e-ink quantizes them to the panel's grey levels.
+ *  - 48 backgrounds, e-ink only: quantized into the light half of the levels.
  */
 const HIGHLIGHT_BG = "48;2;200;226;245";
 const MAX_FG_LUMA = 0.42;
 function remapSgr(seq: string, params: string): string {
-  if (!/(^|;)(7|27|38)(;|$)/.test(params)) return seq;
+  const eink = themeName === "eink";
+  if (!(eink ? /(^|;)(38|48)(;|$)/ : /(^|;)(7|27|38)(;|$)/).test(params)) return seq;
   const p = params.split(";");
   const out: string[] = [];
   for (let i = 0; i < p.length; i++) {
     const n = p[i];
-    if (n === "38" && p[i + 1] === "2" && i + 4 < p.length) {
-      out.push("38", "2", ...inkClamp(+p[i + 2], +p[i + 3], +p[i + 4]).map(String)); i += 4;
-    } else if (n === "38" && p[i + 1] === "5" && i + 2 < p.length) {
+    const map = n === "38" ? (eink ? einkFg : inkClamp) : n === "48" && eink ? einkBg : null;
+    if (map && p[i + 1] === "2" && i + 4 < p.length) {
+      out.push(n, "2", ...map(+p[i + 2], +p[i + 3], +p[i + 4]).map(String)); i += 4;
+    } else if (map && p[i + 1] === "5" && i + 2 < p.length) {
       const rgb = xterm256(+p[i + 2]);
-      if (rgb) out.push("38", "2", ...inkClamp(...rgb).map(String)); else out.push("38", "5", p[i + 2]);
+      if (rgb) out.push(n, "2", ...map(...rgb).map(String)); else out.push(n, "5", p[i + 2]);
       i += 2;
     } else if ((n === "48" || n === "58") && (p[i + 1] === "2" || p[i + 1] === "5")) {
       const len = p[i + 1] === "2" ? 5 : 3;      // keep background/underline runs intact
       out.push(...p.slice(i, i + len)); i += len - 1;
-    } else if (n === "7") out.push(HIGHLIGHT_BG);
-    else if (n === "27") out.push("49");
+    } else if (n === "7" && !eink) out.push(HIGHLIGHT_BG);
+    else if (n === "27" && !eink) out.push("49");
     else out.push(n);
   }
   return `\x1b[${out.join(";")}m`;
@@ -175,10 +285,11 @@ function xterm256(n: number): [number, number, number] | null {
 
 /** Lock the paper ruling to xterm's actual cell height. */
 function applyRuling() {
+  const sheet = document.getElementById("sheet")!;
+  if (themeName !== "paper") { sheet.style.paddingTop = ""; return; }
   // semi-private; isolated here so it is a one-line fix if xterm moves it
   const dims = (term as any)._core?._renderService?.dimensions?.css?.cell;
   if (!dims?.height) return;
-  const sheet = document.getElementById("sheet")!;
   // whole pixels only: a half-pixel offset anti-aliases the 1px rules to grey
   const cell = Math.round(dims.height);
   // 1.5 rows of space above the text; the header strip hides the top rule,

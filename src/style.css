@@ -126,3 +126,77 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
   background-clip: content-box;
 }
 .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover { background-color: rgba(28, 42, 96, 0.4); }
+
+/* ---------- e-ink ----------
+   A matte, unlit reflective panel. Every tone is a flat level from the
+   16-step grey ramp in main.ts: no shadows, no blending of ink into page,
+   no transitions. The particles flip; they never fade. */
+@font-face {
+  font-family: "Monaspace Xenon";
+  src: url("/fonts/monaspace-xenon-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Monaspace Xenon";
+  src: url("/fonts/monaspace-xenon-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+}
+@font-face {
+  font-family: "Monaspace Xenon";
+  src: url("/fonts/monaspace-xenon-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+}
+
+[data-theme="eink"] {
+  --page: #e2e1db;   /* level 15 */
+  --ink: #161615;    /* level 0 */
+}
+/* reader margins: near-even on every side, deeper at the top for the window controls */
+[data-theme="eink"] #sheet {
+  padding: 40px 32px 28px 36px;
+  background: var(--page);
+}
+[data-theme="eink"] #rules,
+[data-theme="eink"] #holes,
+[data-theme="eink"] #sheet::before { display: none; }
+[data-theme="eink"] #header { height: 32px; }
+
+/* crisp glyph edges like a 300 ppi panel, no subpixel color fringes */
+[data-theme="eink"] .xterm { -webkit-font-smoothing: antialiased; }
+[data-theme="eink"] .xterm .xterm-rows { opacity: 1; }
+[data-theme="eink"] .xterm .xterm-rows span { text-shadow: none; }
+
+/* microcapsule mottle: pigment never settles perfectly evenly, so the panel
+   carries a faint, very fine, non-directional grain over ink and white alike */
+[data-theme="eink"] #grain {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1.6 -0.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  filter: none;
+  mix-blend-mode: soft-light;
+  opacity: 0.35;
+}
+
+/* scrollbar: a thin square ink bar, like a reader's progress mark */
+[data-theme="eink"] .xterm .xterm-viewport::-webkit-scrollbar { width: 9px; }
+[data-theme="eink"] .xterm .xterm-viewport::-webkit-scrollbar-thumb,
+[data-theme="eink"] .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ink);
+  border-radius: 0;
+  border: 3px solid transparent;
+}
+
+/* full refresh, stepped like a Carta waveform: inverted image, black, white, page */
+#sheet::after {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  visibility: hidden;
+}
+[data-theme="eink"] #sheet.refresh::after { animation: eink-refresh 320ms steps(1, end); }
+@keyframes eink-refresh {
+  0%   { visibility: visible; background: transparent; backdrop-filter: invert(1); }
+  25%  { visibility: visible; background: var(--ink); backdrop-filter: none; }
+  55%  { visibility: visible; background: var(--page); }
+  100% { visibility: hidden; }
+}
