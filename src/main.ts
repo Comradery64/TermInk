@@ -4,6 +4,7 @@ import { WebglAddon } from "@xterm/addon-webgl";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import "@xterm/xterm/css/xterm.css";
 
+const USE_WEBGL = false;
 const INK = "rgba(28, 42, 96, 0.88)";       // fountain-pen blue
 const GRAPHITE = "rgba(40, 40, 48, 0.82)";
 
@@ -40,10 +41,10 @@ const el = document.getElementById("term")!;
 async function main() {
   await document.fonts.load('15px "Monaspace Radon"');
   term.open(el);
-  try {
-    term.loadAddon(new WebglAddon());
-  } catch (e) {
-    console.warn("WebGL unavailable, using DOM renderer", e);
+  // DOM renderer on purpose: glyphs are real text, so the ink-on-paper
+  // shadows are plain CSS. WebKit drops CSS filters on the WebGL canvas layer.
+  if (USE_WEBGL) {
+    try { term.loadAddon(new WebglAddon()); } catch (e) { console.warn("WebGL unavailable", e); }
   }
   fit.fit();
   applyRuling();

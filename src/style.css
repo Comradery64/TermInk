@@ -87,10 +87,13 @@ html, body { margin: 0; height: 100%; background: #1c1c1c; overflow: hidden; }
   mix-blend-mode: multiply;
   /* ink on paper: a soft bleed halo, a hairline shadow pressed down-right,
      and a wider faint shadow for the groove the nib leaves */
-  filter:
-    drop-shadow(0 0 0.35px rgba(28, 42, 96, 0.35))
-    drop-shadow(1px 1.5px 0.6px rgba(20, 24, 40, 0.38))
-    drop-shadow(0 2px 2px rgba(20, 24, 40, 0.16));
+}
+/* ink on paper: a bleed halo, a pressed shadow down-right, a soft ambient one */
+.xterm .xterm-rows span {
+  text-shadow:
+    0 0 0.6px rgba(28, 42, 96, 0.25),
+    0.7px 1.1px 0.7px rgba(20, 24, 40, 0.40),
+    0 1.8px 2.2px rgba(20, 24, 40, 0.14);
 }
 /* fine fiber tooth over everything so ink is broken by the paper grain */
 #grain {

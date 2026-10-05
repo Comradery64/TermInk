@@ -7,6 +7,7 @@ use tauri::State;
 struct Pty {
     master: Box<dyn MasterPty + Send>,
     writer: Box<dyn Write + Send>,
+    child: Box<dyn portable_pty::Child + Send + Sync>,
 }
 
 #[derive(Default)]
@@ -35,7 +36,7 @@ fn spawn(state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>
     if let Some(home) = std::env::var_os("HOME") {
         cmd.cwd(home);
     }
-    let _child = pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
+    let child = pair.slave.spawn_command(cmd).map_err(|e| e.to_string())?;
     drop(pair.slave);
 
     let mut reader = pair.master.try_clone_reader().map_err(|e| e.to_string())?;
@@ -49,7 +50,11 @@ fn spawn(state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>
     });
 
     let writer = pair.master.take_writer().map_err(|e| e.to_string())?;
-    *state.0.lock().unwrap() = Some(Pty { master: pair.master, writer });
+    // a frontend reload calls spawn again: end the previous shell instead of orphaning it
+    if let Some(mut old) = state.0.lock().unwrap().take() {
+        let _ = old.child.kill();
+    }
+    *state.0.lock().unwrap() = Some(Pty { master: pair.master, writer, child });
     Ok(())
 }
 
