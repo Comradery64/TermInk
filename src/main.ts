@@ -7,6 +7,7 @@ import { createPanel, PANEL_SECTIONS } from "./eink";
 import { createSettings, CORE, type Section, type Values } from "./settings";
 import { createSyntax, TOKENS, type Token } from "./syntax";
 import { createGutter } from "./gutter";
+import { drawGlyphs } from "./glyphs";
 
 
 /**
@@ -107,6 +108,7 @@ const el = document.getElementById("term")!;
 const panel = createPanel(term, document.getElementById("sheet")!, settings.el);
 
 const gutter = createGutter(term, document.getElementById("sheet")!);
+drawGlyphs(term, document.getElementById("sheet")!);
 const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)) as RGB;
 // token colors are raw here; remapSgr then puts them through the panel like any app color
 const highlight = createSyntax(() => ({

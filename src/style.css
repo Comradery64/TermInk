@@ -325,3 +325,14 @@ html, body { background: var(--bezel); }
   font-variant-numeric: tabular-nums;
 }
 #gutter div.cur { color: var(--ink-3); font-weight: 700; }
+
+/* ---- block and box glyphs drawn as geometry (glyphs.ts): full cell, rows join ---- */
+.xterm-rows { --stroke: 1.3px; --stroke-heavy: 2.6px; }
+.xterm-rows span.glyph {
+  display: inline-block;
+  vertical-align: top;
+  width: var(--cw);
+  height: 100%;
+  /* a hair wider so neighbouring cells overlap and fractional widths leave no seam */
+  margin-right: -0.4px; padding-right: 0.4px;
+}
