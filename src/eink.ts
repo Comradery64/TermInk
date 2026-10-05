@@ -103,6 +103,20 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   const bezel = mk("bezel", document.body);
   bezel.setAttribute("data-tauri-drag-region", "");
   bezel.innerHTML = `<span class="mark">termink</span>`;
+  // The bezel sits above the screen like real plastic over glass, with a window cut to
+  // the screen's exact rounded rect. Anything poking past the glass (scrollbars, gutters)
+  // is physically hidden. clip-path also limits hit-testing, so the hole stays clickable.
+  const cut = () => {
+    const { left: x, top: y, width: w, height: h } = sheet.getBoundingClientRect();
+    const k = parseFloat(getComputedStyle(sheet).borderTopLeftRadius) || 0;
+    const W = innerWidth, H = innerHeight;
+    bezel.style.clipPath = `path(evenodd, "M0 0H${W}V${H}H0Z`
+      + `M${x + k} ${y}H${x + w - k}A${k} ${k} 0 0 1 ${x + w} ${y + k}V${y + h - k}`
+      + `A${k} ${k} 0 0 1 ${x + w - k} ${y + h}H${x + k}A${k} ${k} 0 0 1 ${x} ${y + h - k}`
+      + `V${y + k}A${k} ${k} 0 0 1 ${x + k} ${y}Z")`;
+  };
+  new ResizeObserver(cut).observe(sheet);
+  addEventListener("resize", cut);
 
   // ---- settings ----
   const prefs = mk("settings");
@@ -156,6 +170,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     root.setProperty("--chin", v.chin ? `${v.chinSize}px` : "0px");
     root.setProperty("--corner", `${v.corner}px`);
     bezel.classList.toggle("no-mark", !v.wordmark);
+    requestAnimationFrame(cut);   // bezel width or corner radius may have moved the window
   }
   // opening and closing a menu is a full refresh on a reader
   function toggleSettings() {
