@@ -31,7 +31,7 @@ html, body { margin: 0; width: 1024px; height: 1024px; background: transparent; 
 .text { position: absolute; left: 0; right: 0; top: 0; bottom: 0; filter: url(#fuzz); }
 .line { position: absolute; font: 700 var(--fs)/1 "Monaspace Neon", monospace; color: var(--ink); white-space: pre;
   text-shadow: 6px 9px 9px rgba(18,17,12,0.30), 2px 3px 3px rgba(18,17,12,0.22); }
-.ghost { font-weight: 400; opacity: 0.11; filter: blur(2.5px); text-shadow: none; }
+.ghost { font-weight: 400; opacity: 0.15; filter: blur(2.5px); text-shadow: none; }
 /* black is never solid: page-colored specks knocked out of the ink */
 #grain { position: absolute; inset: 0; mix-blend-mode: lighten; opacity: 0.6;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.45' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.886 0 0 0 0 0.882 0 0 0 0 0.859 3.2 0 0 0 -1.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
@@ -49,7 +49,7 @@ html, body { margin: 0; width: 1024px; height: 1024px; background: transparent; 
     <div class="text">
       <div class="line ghost" style="--fs:96px; left:var(--x); top:var(--g1)">ls -la</div>
       <div class="line ghost" style="--fs:96px; left:var(--x); top:var(--g2)">git log</div>
-      <div class="line" style="--fs:var(--big); left:var(--x); top:var(--p)">&gt;<span style="display:inline-block;width:0.42em;height:0.7em;margin-left:0.22em;vertical-align:-0.06em;background:var(--ink);box-shadow:6px 9px 9px rgba(18,17,12,0.30),2px 3px 3px rgba(18,17,12,0.22)"></span></div>
+      <div class="line" style="--fs:var(--big); left:var(--x); top:var(--p)">&gt;<span style="display:inline-block;width:0.378em;height:0.77em;margin-left:0.22em;vertical-align:-0.06em;background:var(--ink);box-shadow:6px 9px 9px rgba(18,17,12,0.30),2px 3px 3px rgba(18,17,12,0.22)"></span></div>
     </div>
     <div id="grain"></div>
     <div id="light"></div>
