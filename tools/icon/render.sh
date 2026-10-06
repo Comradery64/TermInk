@@ -19,9 +19,10 @@ for v in plain bezel; do
     shot /tmp/termink-icon.png "?${b}mode=$m"
     # macOS grid: 824px rounded square centred on a 1024 canvas, with a soft drop shadow
     magick /tmp/termink-icon.png -resize 824x824 \
-      \( -size 824x824 xc:none -fill white -draw "roundrectangle 0,0 823,823 185,185" \) -compose DstIn -composite \
-      \( +clone -background black -shadow 35x10+0+10 \) +swap -background none -compose Over -layers merge +repage \
-      -gravity center -background none -extent 1024x1024 -resize 512x512 "$dock/$v-$m.png"
+      \( -size 824x824 xc:none -fill white -draw "roundrectangle 0,0 823,823 185,185" \) \
+      -alpha set -compose DstIn -composite +compose /tmp/termink-masked.png
+    magick /tmp/termink-masked.png -background none -gravity center -extent 1024x1024 \
+      \( +clone -background black -shadow 35x10+0+10 \) +swap -compose Over -composite -resize 512x512 "$dock/$v-$m.png"
   done
 done
 echo "rendered"
