@@ -74,11 +74,11 @@ const panelTheme = (map: (r: number, g: number, b: number) => RGB) => ({
 const THEMES = { eink: panelTheme(einkFg), kaleido: panelTheme(kaleidoFg) };
 const INPUT_SGR = `\x1b[38;2;${level(0).join(";")}m`;   // typed commands: full black; output one level up
 const CODE: Section[] = [
-  { title: "Line numbers", fields: [
+  { tab: "Terminal", title: "History", fields: [
     { key: "lineNumbers", label: "Line numbers", type: "select", default: "off",
       options: [["off", "Off"], ["absolute", "Absolute"], ["relative", "Relative"]] },
   ] },
-  { title: "Syntax highlighting", fields: [
+  { tab: "Text", title: "Syntax highlighting", fields: [
     { key: "hlOutput", label: "Command output", type: "toggle", default: true },
     { key: "hlCommands", label: "Typed commands", type: "toggle", default: false },
     // off: tokens are marked by weight and style alone, in plain ink
@@ -86,7 +86,9 @@ const CODE: Section[] = [
     ...TOKENS.map(([t, label, color]) => ({ key: `color.${t}`, label, type: "color" as const, default: color, parent: "hlColor" })),
   ] },
 ];
-const settings = createSettings([...CORE, ...CODE, ...PANEL_SECTIONS], "termink.settings.v2", apply,
+const TAB_ORDER = ["Text", "Screen", "Device", "Terminal"];
+const SECTIONS = [...CORE, ...CODE, ...PANEL_SECTIONS].sort((a, b) => TAB_ORDER.indexOf(a.tab!) - TAB_ORDER.indexOf(b.tab!));
+const settings = createSettings(SECTIONS, "termink.settings.v2", apply,
   // TermInk's defaults, tuned on the real panel: thin even margins, Neon at 13px,
   // a slim bezel with well-rounded glass, and a quiet title bar
   { margin: 10, font: "Monaspace Neon", fontSize: 13, clock: false, battery: false, bezel: 20, bezelTop: 10, chin: true, chinSize: 8, corner: 17 });

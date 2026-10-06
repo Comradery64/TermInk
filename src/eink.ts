@@ -24,7 +24,7 @@ const A2_BYTES = 2500;           // a single frame this big means a flood: fast 
 
 /** TermInk's own settings, shown after the shared ones. */
 export const PANEL_SECTIONS: Section[] = [
-  { title: "Title bar", fields: [
+  { tab: "Device", title: "Title bar", fields: [
     { key: "status", label: "Show title bar", type: "toggle", default: true },
     { key: "brand", label: "Name", type: "toggle", default: true, parent: "status" },
     { key: "title", label: "Window title", type: "toggle", default: true, parent: "status" },
@@ -32,13 +32,13 @@ export const PANEL_SECTIONS: Section[] = [
     { key: "clock", label: "Clock", type: "toggle", default: true, parent: "status" },
     { key: "battery", label: "Battery", type: "toggle", default: true, parent: "status" },
   ] },
-  { title: "Footer", fields: [
+  { tab: "Device", title: "Footer", fields: [
     { key: "footer", label: "Show footer", type: "toggle", default: false },
     { key: "page", label: "Page number", type: "toggle", default: true, parent: "footer" },
     { key: "track", label: "Progress line", type: "toggle", default: true, parent: "footer" },
     { key: "percent", label: "Percent", type: "toggle", default: true, parent: "footer" },
   ] },
-  { title: "Bezel", fields: [
+  { tab: "Device", title: "Bezel", fields: [
     { key: "bezel", label: "Bezel width", type: "range", default: 30, min: 0, max: 80, step: 2, unit: "px" },
     { key: "bezelTop", label: "Top bezel extra", type: "range", default: 0, min: 0, max: 60, step: 1, unit: "px" },
     { key: "chin", label: "Chin", type: "toggle", default: false },
@@ -46,17 +46,25 @@ export const PANEL_SECTIONS: Section[] = [
     { key: "wordmark", label: "Wordmark", type: "toggle", default: true },
     { key: "corner", label: "Screen corners", type: "range", default: 6, min: 0, max: 17, step: 1, unit: "px" },
   ] },
-  { title: "Panel", fields: [
+  { tab: "Screen", title: "Panel", fields: [
     { key: "mode", label: "Panel", type: "select", default: "kaleido", options: [["eink", "Carta grey"], ["kaleido", "Kaleido color"]] },
     { key: "light", label: "Front light", type: "select", default: "off", options: [["off", "Off"], ["cool", "Cool"], ["warm", "Warm"]] },
+  ] },
+  { tab: "Screen", title: "Refresh", fields: [
     { key: "frame", label: "Refresh interval", type: "range", default: 130, min: 16, max: 400, step: 2, unit: " ms" },
     { key: "ghost", label: "Ghosting", type: "range", default: 0.075, min: 0, max: 0.25, step: 0.005 },
     { key: "fullEvery", label: "Full refresh every", type: "range", default: 6, min: 1, max: 30, step: 1, unit: " pages" },
+    { key: "sleep", label: "Sleep after unfocused", type: "range", default: 60, min: 0, max: 900, step: 15, unit: " s" },
+  ] },
+  { tab: "Device", title: "App icon", fields: [
+    { key: "icon", label: "Dock icon", type: "select", default: "bezel", options: [["bezel", "Bezel"], ["plain", "Plain"]] },
+  ] },
+  { tab: "Text", title: "Ink", fields: [
     // page-colored specks in the ink and eaten glyph edges; 1 is the original panel
     { key: "texture", label: "Ink texture", type: "range", default: 1.4, min: 0, max: 3, step: 0.1 },
-    { key: "icon", label: "App icon", type: "select", default: "bezel", options: [["bezel", "Bezel"], ["plain", "Plain"]] },
-    { key: "mouse", label: "Mouse cursor", type: "select", default: "block", options: [["block", "Ink block"], ["ibeam", "Ink I-beam"], ["system", "System"]] },
-    { key: "sleep", label: "Sleep after unfocused", type: "range", default: 60, min: 0, max: 900, step: 15, unit: " s" },
+  ] },
+  { tab: "Terminal", title: "Input", fields: [
+    { key: "mouse", label: "Mouse pointer", type: "select", default: "block", options: [["block", "Ink block"], ["ibeam", "Ink I-beam"], ["system", "System"]] },
   ] },
 ];
 

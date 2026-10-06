@@ -12,28 +12,33 @@ export type Field =
   // options: [css family, label]; each choice is previewed in its own face
   | (Base & { type: "font"; default: string; options: [string, string][] })
   | (Base & { type: "color"; default: string });
-export type Section = { title: string; fields: Field[] };
+// sections sharing a tab and title render as one group, so hosts can add fields to a shared group
+export type Section = { tab?: string; title: string; fields: Field[] };
 export type Values = Record<string, boolean | number | string>;
 
 /** The fields every terminal app here shares; hosts add their own sections. */
 export const CORE: Section[] = [
-  { title: "Text", fields: [
+  { tab: "Text", title: "Typeface", fields: [
     { key: "font", label: "Font", type: "font", default: "Monaspace Xenon", options: [
       ["Monaspace Xenon", "Monaspace Xenon · slab serif"], ["Monaspace Neon", "Monaspace Neon · neo-grotesque"],
       ["Monaspace Argon", "Monaspace Argon · humanist"], ["Monaspace Krypton", "Monaspace Krypton · mechanical"],
       ["Monaspace Radon", "Monaspace Radon · handwriting"], ["Victor Mono", "Victor Mono · cursive italics"],
       ["Maple Mono", "Maple Mono · rounded"],
     ] },
+  ] },
+  { tab: "Text", title: "Size & spacing", fields: [
     { key: "fontSize", label: "Font size", type: "range", default: 15, min: 9, max: 32, step: 1, unit: "px" },
     { key: "lineHeight", label: "Line spacing", type: "range", default: 1.4, min: 1, max: 2, step: 0.05 },
-    { key: "cursor", label: "Cursor", type: "select", default: "block",
-      options: [["block", "Block"], ["bar", "Bar"], ["underline", "Underline"]] },
-  ] },
-  { title: "Layout", fields: [
     { key: "margin", label: "Margin", type: "range", default: 30, min: 4, max: 96, step: 2, unit: "px" },
   ] },
-  { title: "Behaviour", fields: [
+  { tab: "Text", title: "Ink", fields: [
+    { key: "cursor", label: "Text cursor", type: "select", default: "block",
+      options: [["block", "Block"], ["bar", "Bar"], ["underline", "Underline"]] },
+  ] },
+  { tab: "Terminal", title: "Input", fields: [
     { key: "optionMeta", label: "Option key acts as Meta", type: "toggle", default: false },
+  ] },
+  { tab: "Terminal", title: "History", fields: [
     { key: "scrollback", label: "Scrollback", type: "range", default: 5000, min: 1000, max: 50000, step: 1000, unit: " lines" },
   ] },
 ];
@@ -55,26 +60,41 @@ export function createSettings(
   try { saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}"); } catch { /* corrupt: use defaults */ }
   const values: Values = { ...defaults, ...saved };
 
+  const tabs = [...new Set(sections.map((s) => s.tab ?? ""))];
+  const groups: { tab: string; title: string; fields: Field[] }[] = [];
+  for (const s of sections) {
+    const tab = s.tab ?? "", g = groups.find((x) => x.tab === tab && x.title === s.title);
+    g ? g.fields.push(...s.fields) : groups.push({ tab, title: s.title, fields: [...s.fields] });
+  }
   const el = document.createElement("div");
   el.className = "settings";
-  el.innerHTML = `<h1>Settings</h1>` + sections.map((s) =>
-    `<section><h2>${s.title}</h2>${s.fields.map(row).join("")}</section>`).join("")
-    + `<button class="reset" type="button">Reset to defaults</button>`;
+  el.innerHTML = `<header><h1>Settings</h1>`
+    + (tabs.length > 1 ? `<nav class="tabs">${tabs.map((t) => `<button type="button" data-tab="${t}">${t}</button>`).join("")}</nav>` : "")
+    + `</header>` + groups.map((g) =>
+      `<section data-tab="${g.tab}"><h2>${g.title}</h2>${g.fields.map(row).join("")}</section>`).join("")
+    + `<button class="reset" type="button">Reset all to defaults</button>`;
 
+  function showTab(t: string) {
+    el.querySelectorAll<HTMLElement>("section").forEach((s) => { s.hidden = s.dataset.tab !== t; });
+    el.querySelectorAll<HTMLElement>("[data-tab]:not(section)").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
+  }
+
+  // every row: label on the left, control on the right
   function row(f: Field): string {
     const indent = f.parent ? " child" : "";
     if (f.type === "toggle")
-      return `<label class="row toggle${indent}" data-row="${f.key}"><input type="checkbox" data-k="${f.key}"><span>${f.label}</span></label>`;
+      return `<label class="row toggle${indent}" data-row="${f.key}"><span>${f.label}</span><input type="checkbox" data-k="${f.key}"></label>`;
     if (f.type === "range")
       return `<label class="row range${indent}" data-row="${f.key}"><span>${f.label}</span>`
-        + `<input type="range" data-k="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}"><output></output></label>`;
+        + `<output></output><input type="range" data-k="${f.key}" min="${f.min}" max="${f.max}" step="${f.step}"></label>`;
     if (f.type === "color")
-      return `<label class="row color${indent}" data-row="${f.key}"><span>${f.label}</span>`
-        + `<input type="color" data-k="${f.key}"><output></output></label>`;
+      return `<label class="row color${indent}" data-row="${f.key}"><input type="color" data-k="${f.key}"><span>${f.label}</span></label>`;
     if (f.type === "font")
-      return `<div class="row font${indent}" data-row="${f.key}"><span>${f.label}</span><span class="fonts">`
-        + f.options.map(([v, l]) => `<button type="button" data-k="${f.key}" data-v="${v}" style="font-family:'${v}',monospace">`
-          + `<b>${l}</b><i>The quick brown fox · 0Oo 1lI {}#</i></button>`).join("")
+      return `<div class="row font${indent}" data-row="${f.key}"><span class="fonts">`
+        + f.options.map(([v, l]) => {
+          const [name, kind] = l.split(" · ");
+          return `<button type="button" data-k="${f.key}" data-v="${v}"><b style="font-family:'${v}',monospace">${name}</b><i>${kind ?? ""}</i></button>`;
+        }).join("")
         + `</span></div>`;
     return `<div class="row select${indent}" data-row="${f.key}"><span>${f.label}</span><span class="seg">`
       + f.options.map(([v, l]) => `<button type="button" data-k="${f.key}" data-v="${v}">${l}</button>`).join("")
@@ -84,19 +104,18 @@ export function createSettings(
   function sync() {
     for (const f of fields) {
       const r = el.querySelector<HTMLElement>(`[data-row="${f.key}"]`)!;
-      const off = f.parent !== undefined && !values[f.parent];
-      r.classList.toggle("disabled", off);
+      // sub-options only appear while their parent is on
+      r.hidden = f.parent !== undefined && !values[f.parent];
       if (f.type === "toggle") {
-        const i = r.querySelector("input")!; i.checked = !!values[f.key]; i.disabled = off;
+        r.querySelector("input")!.checked = !!values[f.key];
       } else if (f.type === "color") {
-        const i = r.querySelector("input")!; i.value = String(values[f.key]); i.disabled = off;
-        r.querySelector("output")!.textContent = String(values[f.key]);
+        r.querySelector("input")!.value = String(values[f.key]);
       } else if (f.type === "range") {
-        const i = r.querySelector("input")!; i.value = String(values[f.key]); i.disabled = off;
+        r.querySelector("input")!.value = String(values[f.key]);
         r.querySelector("output")!.textContent = `${values[f.key]}${f.unit ?? ""}`;
       } else {
         r.querySelectorAll<HTMLButtonElement>("button").forEach((b) => {
-          b.classList.toggle("on", b.dataset.v === values[f.key]); b.disabled = off;
+          b.classList.toggle("on", b.dataset.v === values[f.key]);
         });
       }
     }
@@ -119,7 +138,8 @@ export function createSettings(
   el.addEventListener("click", (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>("button");
     if (!b) return;
-    if (b.classList.contains("reset")) {
+    if (b.dataset.tab !== undefined) { showTab(b.dataset.tab); el.parentElement?.scrollTo(0, 0); }
+    else if (b.classList.contains("reset")) {
       Object.assign(values, defaults);
       localStorage.removeItem(storageKey);
       sync(); onChange(values);
@@ -127,5 +147,6 @@ export function createSettings(
   });
 
   sync();
+  showTab(tabs[0]);
   return { values, defaults, el, set };
 }

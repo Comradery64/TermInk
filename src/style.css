@@ -265,33 +265,36 @@ html, body { background: var(--bezel); }
   font: 400 12.5px/1.4 "Monaspace Xenon", monospace;
   overflow: auto;
 }
-:is(#settings, .prefs-ghost) h1 {
-  margin: 0 0 18px; padding-bottom: 10px;
-  font-size: 20px; font-weight: 700; letter-spacing: 0.08em;
-  border-bottom: 2px solid var(--ink);
+/* header: title and tabs stay pinned while a tab's page scrolls under them */
+:is(#settings, .prefs-ghost) header {
+  position: sticky; top: -26px; z-index: 1;
+  margin: -26px -26px 14px; padding: 22px 26px 0;
+  background: var(--page);
 }
+:is(#settings, .prefs-ghost) h1 { margin: 0 0 14px; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; }
+/* tabs: a row of words over a heavy rule; the open tab is inverted */
+:is(#settings, .prefs-ghost) .tabs { display: flex; border-bottom: 2px solid var(--ink); }
+:is(#settings, .prefs-ghost) .tabs button { flex: 1; padding: 6px 0; font-weight: 700; letter-spacing: 0.04em; }
+:is(#settings, .prefs-ghost) .tabs button.on { background: var(--ink); color: var(--page); }
 :is(#settings, .prefs-ghost) h2 {
-  margin: 0; padding: 6px 0;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  margin: 0 0 2px; padding: 10px 0 4px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
   border-bottom: 1px solid rgba(22,22,21,0.35);
 }
-:is(#settings, .prefs-ghost) section { margin-bottom: 20px; }
-:is(#settings, .prefs-ghost) .row { display: flex; align-items: center; gap: 12px; min-height: 32px; cursor: var(--cur-hand); }
-:is(#settings, .prefs-ghost) .row.child { padding-left: 26px; }
-:is(#settings, .prefs-ghost) .row.disabled { opacity: 0.4; cursor: var(--cur-arrow); }
-:is(#settings, .prefs-ghost) .row.range > span, :is(#settings, .prefs-ghost) .row.select > span:first-child { flex: 1; }
-:is(#settings, .prefs-ghost) output { width: 5.5em; text-align: right; font-variant-numeric: tabular-nums; }
-/* square ink checkbox: empty box, filled solid when on */
-:is(#settings, .prefs-ghost) input[type="checkbox"] {
-  appearance: none; -webkit-appearance: none; margin: 0;
-  width: 14px; height: 14px;
-  border: 1.5px solid var(--ink);
-  background: var(--page);
-  box-shadow: inset 0 0 0 2px var(--page);
-}
-:is(#settings, .prefs-ghost) input[type="checkbox"]:checked { background: var(--ink); }
+:is(#settings, .prefs-ghost) section { margin-bottom: 14px; }
+/* every row: label left, control right */
+:is(#settings, .prefs-ghost) .row { display: flex; align-items: center; gap: 10px; min-height: 30px; cursor: var(--cur-hand); }
+:is(#settings, .prefs-ghost) .row > span:first-child { flex: 1; }
+:is(#settings, .prefs-ghost) .row[hidden] { display: none; }
+/* sub-options hang off their parent on a hairline */
+:is(#settings, .prefs-ghost) .row.child { margin-left: 6px; padding-left: 14px; border-left: 1px solid rgba(22,22,21,0.35); }
+:is(#settings, .prefs-ghost) output { min-width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; }
+/* toggles: no box, just the state as a word at the row's end; inverted when on */
+:is(#settings, .prefs-ghost) input[type="checkbox"] { position: absolute; opacity: 0; pointer-events: none; }
+:is(#settings, .prefs-ghost) .row.toggle::after { content: "Off"; min-width: 3em; padding: 1px 0; text-align: center; border: 1.5px solid var(--ink); }
+:is(#settings, .prefs-ghost) .row.toggle:has(:checked)::after { content: "On"; background: var(--ink); color: var(--page); }
 /* slider: a hairline track and a square ink thumb */
-:is(#settings, .prefs-ghost) input[type="range"] { -webkit-appearance: none; appearance: none; width: 120px; height: 14px; background: none; margin: 0; }
+:is(#settings, .prefs-ghost) input[type="range"] { -webkit-appearance: none; appearance: none; width: 110px; height: 14px; background: none; margin: 0; }
 :is(#settings, .prefs-ghost) input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink); }
 :is(#settings, .prefs-ghost) input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none; width: 12px; height: 14px; margin-top: -6px;
@@ -301,21 +304,32 @@ html, body { background: var(--bezel); }
 :is(#settings, .prefs-ghost) .seg { display: inline-flex; border: 1.5px solid var(--ink); }
 :is(#settings, .prefs-ghost) button {
   font: inherit; color: var(--ink); background: var(--page);
-  border: 0; padding: 4px 11px; cursor: var(--cur-hand);
+  border: 0; padding: 3px 9px; cursor: var(--cur-hand);
 }
 :is(#settings, .prefs-ghost) .seg button + button { border-left: 1.5px solid var(--ink); }
 :is(#settings, .prefs-ghost) .seg button.on { background: var(--ink); color: var(--page); }
-:is(#settings, .prefs-ghost) .reset { border: 1.5px solid var(--ink); margin-top: 6px; }
+:is(#settings, .prefs-ghost) .reset { display: block; width: 100%; border: 1.5px solid var(--ink); padding: 6px; margin-top: 8px; }
 :is(#settings, .prefs-ghost) .reset:active { background: var(--ink); color: var(--page); }
 
-/* font list: each face previews itself; the chosen one is inverted */
-:is(#settings, .prefs-ghost) .row.font { flex-direction: column; align-items: stretch; gap: 6px; padding: 6px 0; cursor: var(--cur-arrow); }
+/* font list: one line each, the name set in its own face; the chosen one is inverted */
+:is(#settings, .prefs-ghost) .row.font { display: block; padding: 6px 0; cursor: var(--cur-arrow); }
 :is(#settings, .prefs-ghost) .fonts { display: flex; flex-direction: column; border: 1.5px solid var(--ink); }
-:is(#settings, .prefs-ghost) .fonts button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 10px; text-align: left; }
+:is(#settings, .prefs-ghost) .fonts button { display: flex; align-items: baseline; gap: 10px; padding: 6px 10px; text-align: left; }
 :is(#settings, .prefs-ghost) .fonts button + button { border-top: 1px solid rgba(22,22,21,0.35); }
-:is(#settings, .prefs-ghost) .fonts b { font-size: 11px; font-weight: 700; }
-:is(#settings, .prefs-ghost) .fonts i { font-style: normal; font-size: 13px; }
+:is(#settings, .prefs-ghost) .fonts b { flex: 1; font-size: 13.5px; font-weight: 400; }
+:is(#settings, .prefs-ghost) .fonts i { font-style: normal; font-size: 10.5px; opacity: 0.7; }
 :is(#settings, .prefs-ghost) .fonts button.on { background: var(--ink); color: var(--page); }
+
+/* token colors: a two-column grid of swatches */
+:is(#settings, .prefs-ghost) section:has(.row.color) { display: flex; flex-wrap: wrap; column-gap: 12px; }
+:is(#settings, .prefs-ghost) section:has(.row.color) > :not(.row.color) { flex-basis: 100%; }
+:is(#settings, .prefs-ghost) .row.color { flex-basis: calc(50% - 6px); box-sizing: border-box; min-height: 26px; }
+:is(#settings, .prefs-ghost) input[type="color"] {
+  -webkit-appearance: none; appearance: none; width: 16px; height: 16px; padding: 0; margin: 0;
+  border: 1.5px solid var(--ink); background: none;
+}
+:is(#settings, .prefs-ghost) input[type="color"]::-webkit-color-swatch-wrapper { padding: 1.5px; }
+:is(#settings, .prefs-ghost) input[type="color"]::-webkit-color-swatch { border: 0; }
 
 /* ---- line numbers: a quiet column in the left margin ---- */
 #sheet { padding-left: calc(var(--m) + var(--gw, 0px)); }
@@ -351,7 +365,7 @@ html, body { background: var(--bezel); }
 :is(#settings, .prefs-ghost) .settings :is(h1, h2, span, b, i, output, button) {
   text-shadow: 0.7px 1.1px 1.1px rgba(18, 17, 12, 0.30), 0.2px 0.3px 0.3px rgba(18, 17, 12, 0.22);
 }
-:is(#settings, .prefs-ghost) .seg button.on, :is(#settings, .prefs-ghost) .fonts button.on { text-shadow: none; }
+:is(#settings, .prefs-ghost) :is(.seg, .fonts, .tabs) button.on, :is(#settings, .prefs-ghost) .fonts button.on :is(b, i) { text-shadow: none; }
 /* drawer is a page-turned list, no smooth scrolling; the bar is a thin square ink mark */
 #settings { scroll-behavior: auto; }
 #settings::-webkit-scrollbar { width: 9px; }
@@ -398,7 +412,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar,
 html, body, html .xterm .xterm-viewport, html .xterm .xterm-scrollable-element { cursor: var(--cur-arrow); }
 html .xterm, html .xterm .xterm-screen, html .xterm .xterm-helper-textarea { cursor: var(--cur-text); }
 html .xterm .xterm-cursor-pointer, a, button, [role="button"], :is(#settings, .prefs-ghost) .row { cursor: var(--cur-hand); }
-:is(#settings, .prefs-ghost) .row.disabled, :is(#settings, .prefs-ghost) .row.font { cursor: var(--cur-arrow); }
+:is(#settings, .prefs-ghost) .row.font { cursor: var(--cur-arrow); }
 /* block mode: the pointer is drawn on the grid instead (main.ts) */
 [data-mouse="block"] { --cur-text: none; }
 .mouse-block { display: none; position: absolute; z-index: 4; pointer-events: none; background: var(--ink); filter: url(#eink-fuzz); }
