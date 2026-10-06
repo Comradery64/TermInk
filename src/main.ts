@@ -133,6 +133,30 @@ function fitPage() {
   const dx = Math.max(0, (el.clientWidth - screen.offsetWidth) / 2);
   const dy = Math.max(0, (el.clientHeight - screen.offsetHeight) / 2);
   screen.style.transform = `translate(${Math.floor(dx)}px, ${Math.floor(dy)}px)`;
+  mouseBlock(screen.offsetWidth / term.cols, screen.offsetHeight / term.rows);
+}
+
+/**
+ * The block mouse cursor is the terminal's own block: one cell, in cursor ink, with the
+ * page-colored specks the grain knocks out of it. Redrawn whenever the cell size changes.
+ */
+let blockSize = "";
+function mouseBlock(w: number, h: number) {
+  if (`${w}x${h}` === blockSize || !w || !h) return;
+  blockSize = `${w}x${h}`;
+  const draw = (scale: number) => {
+    const c = document.createElement("canvas");
+    c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+    const g = c.getContext("2d")!;
+    g.fillStyle = String(term.options.theme?.cursor);
+    g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = "rgba(226, 225, 219, 0.5)";
+    for (let i = 0; i < c.width * c.height * 0.06; i++)
+      g.fillRect(Math.floor(Math.random() * c.width), Math.floor(Math.random() * c.height), 1, 1);
+    return c.toDataURL();
+  };
+  document.documentElement.style.setProperty("--cur-block",
+    `-webkit-image-set(url("${draw(1)}") 1x, url("${draw(2)}") 2x) ${Math.floor(w / 2)} ${Math.floor(h / 2)}, text`);
 }
 
 /**
