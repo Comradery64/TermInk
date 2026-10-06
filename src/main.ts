@@ -133,31 +133,28 @@ function fitPage() {
   const dx = Math.max(0, (el.clientWidth - screen.offsetWidth) / 2);
   const dy = Math.max(0, (el.clientHeight - screen.offsetHeight) / 2);
   screen.style.transform = `translate(${Math.floor(dx)}px, ${Math.floor(dy)}px)`;
-  mouseBlock(screen.offsetWidth / term.cols, screen.offsetHeight / term.rows);
+  cellW = screen.offsetWidth / term.cols; cellH = screen.offsetHeight / term.rows;
+  if (mouseBlock.parentElement !== screen) screen.append(mouseBlock);
 }
 
 /**
- * The block mouse cursor is the terminal's own block: one cell, in cursor ink, with the
- * page-colored specks the grain knocks out of it. Redrawn whenever the cell size changes.
+ * The block mouse cursor, like the first terminals: it moves cell by cell on the character
+ * grid. It is a real block on the screen, so the grain, light and eaten edges fall on it
+ * exactly as on the text cursor. The system pointer is hidden over the terminal (style.css).
  */
-let blockSize = "";
-function mouseBlock(w: number, h: number) {
-  if (`${w}x${h}` === blockSize || !w || !h) return;
-  blockSize = `${w}x${h}`;
-  const draw = (scale: number) => {
-    const c = document.createElement("canvas");
-    c.width = Math.round(w * scale); c.height = Math.round(h * scale);
-    const g = c.getContext("2d")!;
-    g.fillStyle = String(term.options.theme?.cursor);
-    g.fillRect(0, 0, c.width, c.height);
-    g.fillStyle = "rgba(226, 225, 219, 0.5)";
-    for (let i = 0; i < c.width * c.height * 0.06; i++)
-      g.fillRect(Math.floor(Math.random() * c.width), Math.floor(Math.random() * c.height), 1, 1);
-    return c.toDataURL();
-  };
-  document.documentElement.style.setProperty("--cur-block",
-    `-webkit-image-set(url("${draw(1)}") 1x, url("${draw(2)}") 2x) ${Math.floor(w / 2)} ${Math.floor(h / 2)}, text`);
-}
+let cellW = 0, cellH = 0;
+const mouseBlock = document.createElement("div");
+mouseBlock.className = "mouse-block";
+el.addEventListener("mousemove", (e) => {
+  const r = mouseBlock.parentElement?.getBoundingClientRect();
+  if (!r || !cellW) return;
+  const col = Math.floor((e.clientX - r.left) / cellW), row = Math.floor((e.clientY - r.top) / cellH);
+  const inside = col >= 0 && row >= 0 && col < term.cols && row < term.rows;
+  mouseBlock.hidden = !inside;
+  if (inside) Object.assign(mouseBlock.style,
+    { left: `${col * cellW}px`, top: `${row * cellH}px`, width: `${cellW}px`, height: `${cellH}px` });
+});
+el.addEventListener("mouseleave", () => { mouseBlock.hidden = true; });
 
 /**
  * Load every face of a family up front. Bold and italic otherwise load lazily the
