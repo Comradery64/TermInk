@@ -89,7 +89,7 @@ const CODE: Section[] = [
 const TAB_ORDER = ["Text", "Screen", "Device", "Terminal"];
 const SECTIONS = [...CORE, ...CODE, ...PANEL_SECTIONS].sort((a, b) => TAB_ORDER.indexOf(a.tab!) - TAB_ORDER.indexOf(b.tab!));
 const settings = createSettings(SECTIONS, "termink.settings.v2", apply,
-  // TermInk's defaults, tuned on the real panel: thin even margins, Neon at 13px,
+  // TermInk's defaults, tuned on the real panel: thin even margins, Xenon at 13px,
   // a slim bezel with well-rounded glass, and a quiet title bar
   { margin: 12, font: "Monaspace Xenon", fontSize: 13, clock: false, battery: false, bezel: 16, bezelTop: 0,
     chin: true, chinSize: 10, corner: 12, frame: 148, ghost: 0.07 });
