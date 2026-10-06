@@ -113,6 +113,32 @@ fn traffic_lights(window: tauri::Window, visible: bool, duration: f64) {
     let _ = (window, visible, duration);
 }
 
+/// Swap the Dock icon for the variant matching the app's look ("bezel-eink", "plain-kaleido", ...).
+/// Lasts while the app runs; the bundle icon shows when it is closed.
+#[tauri::command]
+fn dock_icon(app: tauri::AppHandle, name: String) {
+    #[cfg(target_os = "macos")]
+    {
+        let png: &'static [u8] = match name.as_str() {
+            "bezel-eink" => include_bytes!("../icons/dock/bezel-eink.png"),
+            "bezel-kaleido" => include_bytes!("../icons/dock/bezel-kaleido.png"),
+            "plain-eink" => include_bytes!("../icons/dock/plain-eink.png"),
+            "plain-kaleido" => include_bytes!("../icons/dock/plain-kaleido.png"),
+            _ => return,
+        };
+        let _ = app.run_on_main_thread(move || {
+            use objc2::{AllocAnyThread, MainThreadMarker};
+            use objc2_app_kit::{NSApplication, NSImage};
+            let Some(mtm) = MainThreadMarker::new() else { return };
+            let data = objc2_foundation::NSData::with_bytes(png);
+            let Some(img) = NSImage::initWithData(NSImage::alloc(), &data) else { return };
+            unsafe { NSApplication::sharedApplication(mtm).setApplicationIconImage(Some(&img)) };
+        });
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = (app, name);
+}
+
 /// Battery percent and charging state for the e-ink status bar (macOS: pmset).
 #[tauri::command]
 fn battery() -> Result<(u8, bool), String> {
@@ -134,7 +160,7 @@ pub fn run() {
             app.set_menu(tauri::menu::Menu::default(app.handle())?)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![spawn, write, resize, traffic_lights, battery])
+        .invoke_handler(tauri::generate_handler![spawn, write, resize, traffic_lights, battery, dock_icon])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

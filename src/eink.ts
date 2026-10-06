@@ -52,6 +52,9 @@ export const PANEL_SECTIONS: Section[] = [
     { key: "frame", label: "Refresh interval", type: "range", default: 130, min: 16, max: 400, step: 2, unit: " ms" },
     { key: "ghost", label: "Ghosting", type: "range", default: 0.075, min: 0, max: 0.25, step: 0.005 },
     { key: "fullEvery", label: "Full refresh every", type: "range", default: 6, min: 1, max: 30, step: 1, unit: " pages" },
+    // page-colored specks in the ink and eaten glyph edges; 1 is the original panel
+    { key: "texture", label: "Ink texture", type: "range", default: 1.4, min: 0, max: 3, step: 0.1 },
+    { key: "icon", label: "App icon", type: "select", default: "bezel", options: [["bezel", "Bezel"], ["plain", "Plain"]] },
     { key: "sleep", label: "Sleep after unfocused", type: "range", default: 60, min: 0, max: 900, step: 15, unit: " s" },
   ] },
 ];
@@ -84,6 +87,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   let a2Timer = 0;
   let sleeping = false;
   let sleepTimer = 0;
+  let dockIcon = "";
 
   const screen = () => sheet.querySelector<HTMLElement>(".xterm-screen")!;
   const rows = () => sheet.querySelector<HTMLElement>(".xterm-rows:not(.eink-ghost)")!;
@@ -173,6 +177,11 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     root.setProperty("--bezel-top", `${v.bezelTop}px`);
     root.setProperty("--corner", `${Math.min(17, Number(v.corner))}px`);   // clamp older saved values
     frame.classList.toggle("no-mark", !v.wordmark);
+    root.setProperty("--grain", String(Math.min(1, 0.6 * Number(v.texture))));
+    document.querySelector("#eink-fuzz feDisplacementMap")?.setAttribute("scale", String(0.9 * Number(v.texture)));
+    // the Dock shows the chosen icon in the current panel's page tone
+    const icon = `${v.icon}-${v.mode}`;
+    if (icon !== dockIcon) { dockIcon = icon; invoke("dock_icon", { name: icon }).catch(() => {}); }
     requestAnimationFrame(cut);   // bezel width or corner radius may have moved the window
   }
   // opening and closing a menu is a full refresh on a reader

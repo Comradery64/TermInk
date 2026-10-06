@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- The app icon, drawn with the app's own e-ink styling (src/style.css) at icon scale.
-     ?bezel=1 sets the screen into the plastic bezel. Rendered by tools/icon/render.sh. -->
+     ?bezel=1 sets the screen into the plastic bezel; ?mode=kaleido dims the page. Rendered by tools/icon/render.sh. -->
 <meta charset="utf-8">
 <style>
 @font-face { font-family: "Monaspace Neon"; src: url("../../public/fonts/monaspace-neon-latin-700-normal.woff2"); font-weight: 700; }
@@ -61,7 +61,9 @@ html, body { margin: 0; width: 1024px; height: 1024px; background: transparent; 
   <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
 </filter></svg>
 <script>
-  const b = new URLSearchParams(location.search).has("bezel");
+  const q = new URLSearchParams(location.search), b = q.has("bezel");
+  // Kaleido: the color filter array costs reflectance, so the page is dimmer (as in the app)
+  if (q.get("mode") === "kaleido") document.documentElement.style.setProperty("--page", "#d5d2c9");
   document.documentElement.classList.toggle("bezel", b);
   const s = document.documentElement.style;
   // positions relative to the screen: no bezel = full canvas, bezel = inset sheet
