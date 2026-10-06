@@ -55,6 +55,7 @@ export const PANEL_SECTIONS: Section[] = [
     // page-colored specks in the ink and eaten glyph edges; 1 is the original panel
     { key: "texture", label: "Ink texture", type: "range", default: 1.4, min: 0, max: 3, step: 0.1 },
     { key: "icon", label: "App icon", type: "select", default: "bezel", options: [["bezel", "Bezel"], ["plain", "Plain"]] },
+    { key: "mouse", label: "Mouse cursor", type: "select", default: "block", options: [["block", "Ink block"], ["ibeam", "Ink I-beam"], ["system", "System"]] },
     { key: "sleep", label: "Sleep after unfocused", type: "range", default: 60, min: 0, max: 900, step: 15, unit: " s" },
   ] },
 ];
@@ -177,6 +178,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     root.setProperty("--bezel-top", `${v.bezelTop}px`);
     root.setProperty("--corner", `${Math.min(17, Number(v.corner))}px`);   // clamp older saved values
     frame.classList.toggle("no-mark", !v.wordmark);
+    document.documentElement.dataset.mouse = String(v.mouse);
     root.setProperty("--grain", String(Math.min(1, 0.6 * Number(v.texture))));
     document.querySelector("#eink-fuzz feDisplacementMap")?.setAttribute("scale", String(0.9 * Number(v.texture)));
     // the Dock shows the chosen icon in the current panel's page tone
