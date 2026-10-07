@@ -47,10 +47,10 @@ export const PANEL_SECTIONS: Section[] = [
     { key: "corner", label: "Screen corners", type: "range", default: 6, min: 0, max: 17, step: 1, unit: "px" },
   ] },
   { tab: "Screen", title: "Panel", fields: [
-    { key: "mode", label: "Panel", type: "select", default: "kaleido", options: [["eink", "Carta grey"], ["kaleido", "Kaleido color"]] },
+    { key: "mode", label: "Panel type", type: "select", default: "kaleido", options: [["eink", "Carta grey"], ["kaleido", "Kaleido color"]] },
     { key: "light", label: "Front light", type: "select", default: "off", options: [["off", "Off"], ["cool", "Cool"], ["warm", "Warm"]] },
   ] },
-  { tab: "Screen", title: "Refresh", fields: [
+  { tab: "Screen", title: "Refresh & sleep", fields: [
     { key: "frame", label: "Refresh interval", type: "range", default: 130, min: 16, max: 400, step: 2, unit: " ms" },
     { key: "ghost", label: "Ghosting", type: "range", default: 0.075, min: 0, max: 0.25, step: 0.005 },
     { key: "fullEvery", label: "Full refresh every", type: "range", default: 6, min: 1, max: 30, step: 1, unit: " pages" },

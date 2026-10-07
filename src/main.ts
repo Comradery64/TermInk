@@ -74,15 +74,13 @@ const panelTheme = (map: (r: number, g: number, b: number) => RGB) => ({
 const THEMES = { eink: panelTheme(einkFg), kaleido: panelTheme(kaleidoFg) };
 const INPUT_SGR = `\x1b[38;2;${level(0).join(";")}m`;   // typed commands: full black; output one level up
 const CODE: Section[] = [
-  { tab: "Terminal", title: "History", fields: [
+  { tab: "Text", title: "Code", fields: [
     { key: "lineNumbers", label: "Line numbers", type: "select", default: "off",
       options: [["off", "Off"], ["absolute", "Absolute"], ["relative", "Relative"]] },
-  ] },
-  { tab: "Text", title: "Syntax highlighting", fields: [
-    { key: "hlOutput", label: "Command output", type: "toggle", default: true },
-    { key: "hlCommands", label: "Typed commands", type: "toggle", default: false },
+    { key: "hlOutput", label: "Highlight command output", type: "toggle", default: true },
+    { key: "hlCommands", label: "Highlight typed commands", type: "toggle", default: false },
     // off: tokens are marked by weight and style alone, in plain ink
-    { key: "hlColor", label: "Color tokens", type: "toggle", default: false },
+    { key: "hlColor", label: "Highlight in color", type: "toggle", default: false },
     ...TOKENS.map(([t, label, color]) => ({ key: `color.${t}`, label, type: "color" as const, default: color, parent: "hlColor" })),
   ] },
 ];

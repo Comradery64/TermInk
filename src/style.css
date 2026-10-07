@@ -285,7 +285,8 @@ html, body { background: var(--bezel); }
 /* every row: label left, control right */
 :is(#settings, .prefs-ghost) .row { display: flex; align-items: center; gap: 10px; min-height: 30px; cursor: var(--cur-hand); }
 :is(#settings, .prefs-ghost) .row > span:first-child { flex: 1; }
-:is(#settings, .prefs-ghost) .row[hidden] { display: none; }
+/* hidden tabs and sub-options stay hidden, whatever layout rule a section or row has */
+:is(#settings, .prefs-ghost) [hidden] { display: none !important; }
 /* sub-options hang off their parent on a hairline */
 :is(#settings, .prefs-ghost) .row.child { margin-left: 6px; padding-left: 14px; border-left: 1px solid rgba(22,22,21,0.35); }
 :is(#settings, .prefs-ghost) output { min-width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; }
