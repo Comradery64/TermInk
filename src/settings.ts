@@ -24,6 +24,10 @@ export const CORE: Section[] = [
       ["Monaspace Argon", "Monaspace Argon · humanist"], ["Monaspace Krypton", "Monaspace Krypton · mechanical"],
       ["Monaspace Radon", "Monaspace Radon · handwriting"], ["Victor Mono", "Victor Mono · cursive italics"],
       ["Maple Mono", "Maple Mono · rounded"],
+      ["Source Code Pro", "Source Code Pro · classic"], ["Fira Code", "Fira Code · ligatures"],
+      ["JetBrains Mono", "JetBrains Mono · tall x-height"], ["Libertinus Mono", "Libertinus Mono · typewriter serif"],
+      ["Xanh Mono", "Xanh Mono · display serif"], ["JuliaMono", "JuliaMono · wide Unicode"],
+      ["Spline Sans Mono", "Spline Sans Mono · geometric"], ["Ioskeley Mono", "Ioskeley Mono · narrow"],
     ] },
   ] },
   { tab: "Text", title: "Size & spacing", fields: [

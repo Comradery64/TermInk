@@ -22,3 +22,13 @@
 @font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
 @font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
 @font-face { font-family: "Maple Mono"; src: url("/fonts/MapleMono-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; }
+
+/* from Agent-Decoder: regular weight only, so bold and italic are synthesized (licenses: public/fonts/LICENSES.md) */
+@font-face { font-family: "Source Code Pro"; src: url("/fonts/source-code-pro.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Fira Code"; src: url("/fonts/fira-code.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "JetBrains Mono"; src: url("/fonts/jetbrains-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Libertinus Mono"; src: url("/fonts/libertinus-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Xanh Mono"; src: url("/fonts/xanh-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "JuliaMono"; src: url("/fonts/julia-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Spline Sans Mono"; src: url("/fonts/spline-sans-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Ioskeley Mono"; src: url("/fonts/ioskeley-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
