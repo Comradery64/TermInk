@@ -6,6 +6,7 @@
 @font-face { font-family: "Monaspace Neon"; src: url("../../public/fonts/monaspace-neon-latin-700-normal.woff2"); font-weight: 700; }
 @font-face { font-family: "Monaspace Neon"; src: url("../../public/fonts/monaspace-neon-latin-400-normal.woff2"); font-weight: 400; }
 @font-face { font-family: "Monaspace Xenon"; src: url("../../public/fonts/monaspace-xenon-latin-400-normal.woff2"); font-weight: 400; }
+@font-face { font-family: "Monaspace Xenon"; src: url("../../public/fonts/monaspace-xenon-latin-700-normal.woff2"); font-weight: 700; }
 :root { --page: #e2e1db; --ink: #161615; --bezel: #2a2a29; }
 html, body { margin: 0; width: 1024px; height: 1024px; background: transparent; overflow: hidden; }
 #icon { position: absolute; inset: 0; overflow: hidden; background: var(--page); }
@@ -23,13 +24,13 @@ html, body { margin: 0; width: 1024px; height: 1024px; background: transparent; 
 }
 .mark {
   display: none; position: absolute; left: 0; right: 0; bottom: 60px; text-align: center;
-  font: 400 44px/1 "Monaspace Xenon", monospace; letter-spacing: 0.42em; text-indent: 0.42em;
+  font: 700 46px/1 "Monaspace Xenon", monospace; letter-spacing: 0.12em; text-indent: 0.12em;
   color: #333332; text-shadow: 0 -3px 0 rgba(0,0,0,0.55), 0 3px 0 rgba(255,255,255,0.08);
 }
 .bezel .mark { display: block; }
 /* type: the app's ink, scaled up — eaten edges and a short soft lift off the page */
 .text { position: absolute; left: 0; right: 0; top: 0; bottom: 0; filter: url(#fuzz); }
-.line { position: absolute; font: 700 var(--fs)/1 "Monaspace Neon", monospace; color: var(--ink); white-space: pre;
+.line { position: absolute; font: 700 var(--fs)/1 "Monaspace Xenon", monospace; color: var(--ink); white-space: pre;
   text-shadow: 6px 9px 9px rgba(18,17,12,0.30), 2px 3px 3px rgba(18,17,12,0.22); }
 .ghost { font-weight: 400; opacity: 0.15; filter: blur(2.5px); text-shadow: none; }
 /* black is never solid: page-colored specks knocked out of the ink */
@@ -47,14 +48,13 @@ html, body { margin: 0; width: 1024px; height: 1024px; background: transparent; 
 <div id="icon">
   <div id="sheet">
     <div class="text">
-      <div class="line ghost" style="--fs:96px; left:var(--x); top:var(--g1)">ls -la</div>
-      <div class="line ghost" style="--fs:96px; left:var(--x); top:var(--g2)">git log</div>
+      <div class="line ghost" style="--fs:var(--gs); left:var(--x); top:var(--g1)">ls -la</div>
       <div class="line" style="--fs:var(--big); left:var(--x); top:var(--p)">&gt;<span style="display:inline-block;width:0.378em;height:0.77em;margin-left:0.22em;vertical-align:-0.06em;background:var(--ink);box-shadow:6px 9px 9px rgba(18,17,12,0.30),2px 3px 3px rgba(18,17,12,0.22)"></span></div>
     </div>
     <div id="grain"></div>
     <div id="light"></div>
   </div>
-  <div class="mark">TERMINK</div>
+  <div class="mark">TermInk</div>
 </div>
 <svg width="0" height="0" style="position:absolute"><filter id="fuzz" x="0" y="0" width="100%" height="100%">
   <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="1" seed="7" result="n"/>
@@ -67,7 +67,8 @@ html, body { margin: 0; width: 1024px; height: 1024px; background: transparent; 
   document.documentElement.classList.toggle("bezel", b);
   const s = document.documentElement.style;
   // positions relative to the screen: no bezel = full canvas, bezel = inset sheet
-  Object.entries(b ? { "--x": "84px", "--g1": "70px", "--g2": "190px", "--p": "350px", "--big": "300px" }
-                   : { "--x": "170px", "--g1": "170px", "--g2": "300px", "--p": "470px", "--big": "340px" })
+  // one ghost line over a big prompt centred on the screen: one strong shape that survives 32px
+  Object.entries(b ? { "--x": "170px", "--g1": "120px", "--gs": "104px", "--p": "270px", "--big": "380px" }
+                   : { "--x": "250px", "--g1": "230px", "--gs": "120px", "--p": "390px", "--big": "440px" })
     .forEach(([k, v]) => s.setProperty(k, v));
 </script>
