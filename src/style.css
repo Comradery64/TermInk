@@ -263,7 +263,7 @@ html, body { background: var(--bezel); }
   color: var(--ink);
   border-left: 2px solid var(--ink);
   font: 400 12.5px/1.4 "Monaspace Xenon", monospace;
-  overflow: auto;
+  overflow-y: scroll;   /* the scrollbar space is always kept, so switching tabs never shifts the rows */
 }
 /* header: title and tabs stay pinned while a tab's page scrolls under them */
 :is(#settings, .prefs-ghost) header {
