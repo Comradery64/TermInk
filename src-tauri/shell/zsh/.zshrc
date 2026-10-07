@@ -15,3 +15,6 @@ PS1="%{$(printf '\e]133;A\a')%}${PS1}%{$(printf '\e]133;B\a')%}"
 # zsh paints pasted/yanked text in standout until the next key (Cmd+V and
 # Ctrl+Y both count as paste); on the panel it reads as a stray inverse block.
 zle_highlight=("${(@)zle_highlight:#paste:*}" paste:none)
+# completion's trailing "/" is bold by default; in a face with a real bold it
+# reads as a different character, so keep it in plain ink
+zle_highlight=("${(@)zle_highlight:#suffix:*}" suffix:none)
