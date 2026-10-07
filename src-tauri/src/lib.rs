@@ -2,7 +2,7 @@ use portable_pty::{native_pty_system, CommandBuilder, MasterPty, PtySize};
 use std::io::{Read, Write};
 use std::sync::Mutex;
 use tauri::ipc::Channel;
-use tauri::State;
+use tauri::{Manager, State};
 
 struct Pty {
     master: Box<dyn MasterPty + Send>,
@@ -152,6 +152,20 @@ fn battery() -> Result<(u8, bool), String> {
     Ok((pct, s.contains("AC Power")))
 }
 
+/// Settings live in the app's config dir so they persist across sessions; the
+/// webview's localStorage is keyed to the dev-server origin and resets when it changes.
+#[tauri::command]
+fn load_prefs(app: tauri::AppHandle) -> Option<String> {
+    std::fs::read_to_string(app.path().app_config_dir().ok()?.join("prefs.json")).ok()
+}
+
+#[tauri::command]
+fn save_prefs(app: tauri::AppHandle, json: String) -> Result<(), String> {
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    std::fs::write(dir.join("prefs.json"), json).map_err(|e| e.to_string())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(PtyState::default())
@@ -160,7 +174,7 @@ pub fn run() {
             app.set_menu(tauri::menu::Menu::default(app.handle())?)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![spawn, write, resize, traffic_lights, battery, dock_icon])
+        .invoke_handler(tauri::generate_handler![spawn, write, resize, traffic_lights, battery, dock_icon, load_prefs, save_prefs])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -86,7 +86,13 @@ const CODE: Section[] = [
 ];
 const TAB_ORDER = ["Text", "Screen", "Device", "Terminal"];
 const SECTIONS = [...CORE, ...CODE, ...PANEL_SECTIONS].sort((a, b) => TAB_ORDER.indexOf(a.tab!) - TAB_ORDER.indexOf(b.tab!));
-const settings = createSettings(SECTIONS, "termink.settings.v2", apply,
+// Settings persist in a file in the app's config dir: localStorage is keyed to the
+// dev-server origin and resets when the port changes. It stays the in-page cache.
+const PREFS_KEY = "termink.settings.v2";
+const fromFile = await invoke<string | null>("load_prefs").catch(() => null);
+if (fromFile) localStorage.setItem(PREFS_KEY, fromFile);
+const persist = () => invoke("save_prefs", { json: localStorage.getItem(PREFS_KEY) ?? "{}" }).catch(() => {});
+const settings = createSettings(SECTIONS, PREFS_KEY, (v, key) => { apply(v, key); persist(); },
   // TermInk's defaults, tuned on the real panel: thin even margins, Xenon at 13px,
   // a slim bezel with well-rounded glass, and a quiet title bar
   { margin: 12, font: "Monaspace Xenon", fontSize: 13, clock: false, battery: false, bezel: 16, bezelTop: 0,
