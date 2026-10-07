@@ -151,10 +151,10 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     if (Math.abs(prefsAcc) < 40) return;
     const dir = Math.sign(prefsAcc); prefsAcc = 0;
     const max = prefs.scrollHeight - prefs.clientHeight;
-    // a few rows per step: still stepped like a reader, but fine enough to land on any row
-    const to = Math.max(0, Math.min(max, prefs.scrollTop + dir * 90));
+    // half a page per step: stepped like a reader, but no row is ever skipped past
+    const to = Math.max(0, Math.min(max, prefs.scrollTop + dir * prefs.clientHeight * 0.5));
     if (to === prefs.scrollTop) return;
-    prefsLock = performance.now() + 110;
+    prefsLock = performance.now() + 200;
     sheet.querySelector(".prefs-ghost")?.remove();
     const g = document.createElement("div");
     g.className = "prefs-ghost";
