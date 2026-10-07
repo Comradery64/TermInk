@@ -136,6 +136,13 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   // ---- settings ----
   const prefs = mk("settings");
   prefs.append(prefsPage);
+  // Settings are printed on the back of a page. The leaf is hinged at the drawer's
+  // left edge (mid-screen): it starts flipped over to the left, blank front up, and
+  // turns over the hinge so its back, the settings, lands on the right.
+  const leaf = mk("leaf");
+  const front = document.createElement("div");
+  front.className = "leaf-front";
+  leaf.append(front, prefs);
   // the menu is drawn by the same panel: a tapped control inverts for a frame...
   prefs.addEventListener("pointerdown", (e) => {
     const r = (e.target as HTMLElement).closest<HTMLElement>(".row, button");
@@ -197,13 +204,17 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   }
   // opening and closing a menu is a full refresh on a reader
   function toggleSettings() {
+    if (sheet.classList.contains("turning")) return;          // one turn at a time
     const open = !sheet.classList.contains("prefs");
-    fullRefresh();
-    setTimeout(() => {
-      sheet.classList.toggle("prefs", open);
-      if (!open) sheet.querySelector(".prefs-ghost")?.remove();
-      open ? term.blur() : term.focus();
-    }, 90);
+    const done = () => {
+      sheet.classList.remove("turning", "turn-open", "turn-close");
+      if (!open) { sheet.classList.remove("prefs"); sheet.querySelector(".prefs-ghost")?.remove(); term.focus(); }
+      fullRefresh();                                          // the panel settles the new page
+    };
+    if (open) { sheet.classList.add("prefs"); term.blur(); }
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { done(); return; }
+    sheet.classList.add("turning", open ? "turn-open" : "turn-close");
+    leaf.addEventListener("animationend", done, { once: true });
   }
   addEventListener("keydown", (e) => {
     if (sheet.classList.contains("prefs") && (e.key === "Escape" || ((e.metaKey || e.ctrlKey) && e.key === ","))) {

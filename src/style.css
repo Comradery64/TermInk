@@ -418,3 +418,28 @@ html .xterm .xterm-cursor-pointer, a, button, [role="button"], :is(#settings, .p
 [data-mouse="block"] { --cur-text: none; }
 .mouse-block { display: none; position: absolute; z-index: 4; pointer-events: none; background: var(--ink); filter: url(#eink-fuzz); }
 [data-mouse="block"] .mouse-block:not([hidden]) { display: block; }
+
+/* ---- settings arrive as the back of a page turned at mid-screen ---- */
+#sheet.prefs #leaf {
+  display: block;
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 1;
+  width: min(420px, 62%);
+  transform-origin: left center;       /* the hinge: the drawer's left edge, mid-page */
+  transform-style: preserve-3d;
+}
+#sheet.prefs #leaf > #settings { width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+/* the page's front: blank paper, darkening toward the hinge as it lifts */
+.leaf-front {
+  position: absolute; inset: 0;
+  background: linear-gradient(to left, rgba(22,22,21,0.16), transparent 30%), var(--page);
+  transform: rotateY(180deg);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: var(--corner, 6px) 0 0 var(--corner, 6px);
+}
+/* the panel can only show a handful of frames of the turn: hard steps, no easing */
+#sheet.turn-open #leaf { animation: leaf-open 480ms steps(6, end) both; }
+#sheet.turn-close #leaf { animation: leaf-open 480ms steps(6, end) reverse both; }
+@keyframes leaf-open {
+  from { transform: perspective(1800px) rotateY(-180deg); }
+  to   { transform: perspective(1800px) rotateY(0deg); }
+}
