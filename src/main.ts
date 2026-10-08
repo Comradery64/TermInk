@@ -282,7 +282,7 @@ function inkify(chunk: string): string {
     if (m === "A") ready = true;
     return m === "B" ? INPUT_SGR : m === "A" || m === "C" ? RESET_SGR : "";
   });
-  return highlight(s).replace(/\x1b\[([0-9;]*)m/g, remapSgr);
+  return highlight(s).replace(/\x1b\[([0-9;:]*)m/g, remapSgr);
 }
 
 /** True only for an escape sequence that is genuinely cut off at the chunk end. */
@@ -301,9 +301,9 @@ function isPartialEscape(t: string): boolean {
 /** ANSI 16 background codes (40-47, 100-107) -> palette index, so they can be lightened. */
 const ANSI_BG = (n: number) => (n >= 40 && n <= 47 ? n - 40 : n >= 100 && n <= 107 ? n - 92 : -1);
 function remapSgr(seq: string, params: string): string {
-  if (!/(^|;)(38|48|4[0-7]|10[0-7])(;|$)/.test(params)) return seq;
+  if (!/(^|;)(38|48|4[0-7]|10[0-7])(;|:|$)/.test(params)) return seq;
   const k = S.mode === "kaleido";
-  const p = params.split(";");
+  const p = params.split(";").flatMap(colonColor);
   const out: string[] = [];
   for (let i = 0; i < p.length; i++) {
     const n = p[i];
@@ -330,6 +330,18 @@ function remapSgr(seq: string, params: string): string {
     } else out.push(n);
   }
   return `\x1b[${out.join(";")}m`;
+}
+
+/**
+ * ITU colon form of a color (38:2::r:g:b, 38:2:r:g:b, 38:5:n) as the semicolon
+ * params remapSgr reads. Other colon params (underline styles like 4:3) pass as is.
+ */
+function colonColor(n: string): string[] {
+  const c = n.split(":");
+  if (c.length < 3 || !["38", "48", "58"].includes(c[0])) return [n];
+  if (c[1] === "5") return [c[0], "5", c[2]];
+  if (c[1] === "2" && c.length >= 5) return [c[0], "2", ...c.slice(-3)];
+  return [n];
 }
 
 /** RGB for xterm 256-color indices 16..255; null for 0..15 (theme handles those). */
