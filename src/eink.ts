@@ -219,17 +219,22 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     status.querySelector(".clock")!.textContent =
       d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   };
+  let battTimer = 0;
   const battery = async () => {
     try {
       const [pct, charging] = await invoke<[number, boolean]>("battery");
       (status.querySelector(".batt i") as HTMLElement).style.width = `${pct}%`;
       status.querySelector(".batt")!.classList.toggle("charging", charging);
       status.querySelector(".pct")!.textContent = `${pct}%`;
-    } catch { status.querySelector(".batt")!.remove(); }
+    } catch {
+      // no battery (a desktop Mac): drop the gauge for good and stop asking
+      clearInterval(battTimer);
+      status.querySelectorAll(".batt, .pct").forEach((e) => e.remove());
+    }
   };
   tick(); battery();
   setTimeout(() => { tick(); setInterval(tick, 60_000); }, 60_000 - (Date.now() % 60_000));
-  setInterval(battery, 120_000);
+  battTimer = setInterval(battery, 120_000);
 
   // reading progress, Kindle-style: page N of M and percent through the scrollback
   const progress = () => {
