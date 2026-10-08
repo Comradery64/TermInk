@@ -1,6 +1,6 @@
 /**
- * Settings shared by TermInk and TermPaper: a schema of sections and fields,
- * persisted to localStorage, rendered as a plain HTML page the host app styles
+ * Settings module (TermInk's; TermPaper has its own): a schema of sections and fields,
+ * cached in localStorage (the host backs it with a prefs file), rendered as a plain HTML page the host app styles
  * and shows however it likes. No app logic lives here; hosts react in onChange.
  */
 
