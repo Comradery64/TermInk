@@ -1,5 +1,6 @@
 use portable_pty::{native_pty_system, CommandBuilder, MasterPty, PtySize};
 use std::io::{Read, Write};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use tauri::ipc::Channel;
 use tauri::{Manager, State};
@@ -10,14 +11,16 @@ struct Pty {
     child: Box<dyn portable_pty::Child + Send + Sync>,
 }
 
+/// The live shell, and a count of shells spawned so a replaced one can tell it was replaced.
 #[derive(Default)]
-struct PtyState(Mutex<Option<Pty>>);
+struct PtyState(Mutex<Option<Pty>>, AtomicU64);
 
 #[tauri::command]
-fn spawn(state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>) -> Result<(), String> {
+fn spawn(window: tauri::WebviewWindow, state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>) -> Result<(), String> {
     let pair = native_pty_system()
         .openpty(PtySize { rows, cols, pixel_width: 0, pixel_height: 0 })
         .map_err(|e| e.to_string())?;
+    let generation = state.1.fetch_add(1, Ordering::SeqCst) + 1;
 
     let shell = std::env::var("SHELL").unwrap_or_else(|_| {
         if cfg!(windows) { "powershell.exe".into() } else { "/bin/sh".into() }
@@ -46,6 +49,11 @@ fn spawn(state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>
             if n == 0 || on_data.send(buf[..n].to_vec()).is_err() {
                 break;
             }
+        }
+        // the shell exited (`exit`, ^D): close the window, like any terminal. A shell
+        // killed because a reload spawned a new one is not current, so it leaves it open.
+        if window.state::<PtyState>().1.load(Ordering::SeqCst) == generation {
+            let _ = window.close();
         }
     });
 
