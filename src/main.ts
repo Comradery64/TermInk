@@ -93,10 +93,10 @@ const fromFile = await invoke<string | null>("load_prefs").catch(() => null);
 if (fromFile) localStorage.setItem(PREFS_KEY, fromFile);
 const persist = () => invoke("save_prefs", { json: localStorage.getItem(PREFS_KEY) ?? "{}" }).catch(() => {});
 const settings = createSettings(SECTIONS, PREFS_KEY, (v, key) => { apply(v, key); persist(); },
-  // TermInk's defaults, tuned on the real panel: thin even margins, Xenon at 13px,
-  // a slim bezel with well-rounded glass, and a quiet title bar
-  { margin: 12, font: "Monaspace Xenon", fontSize: 13, clock: false, battery: false, bezel: 16, bezelTop: 0,
-    chin: true, chinSize: 10, corner: 12, frame: 148, ghost: 0.07 });
+  // TermInk's defaults, tuned on the real panel (the owner's prefs.json): thin even margins,
+  // Ioskeley at 13px with a bar cursor, light texture, a slim bezel, and a quiet title bar
+  { margin: 12, font: "Ioskeley Mono", fontSize: 13, cursor: "bar", clock: false, battery: false, bezel: 16, bezelTop: 0,
+    chin: true, chinSize: 10, corner: 12, frame: 148, ghost: 0.04, texture: 0.9, mouse: "ibeam" });
 const S = settings.values;
 
 const term = new Terminal({
