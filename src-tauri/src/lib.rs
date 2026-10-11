@@ -29,7 +29,7 @@ fn spawn(window: tauri::WebviewWindow, state: State<PtyState>, cols: u16, rows: 
     cmd.env("TERM", "xterm-256color");
     cmd.env("TERM_PROGRAM", "TermInk");
     if shell.ends_with("zsh") {
-        if let Ok(dir) = install_zsh_integration() {
+        if let Ok(dir) = install_zsh_integration(window.app_handle()) {
             if let Some(user) = std::env::var_os("ZDOTDIR") {
                 cmd.env("TERMINK_USER_ZDOTDIR", user);
             }
@@ -84,10 +84,16 @@ fn resize(state: State<PtyState>, cols: u16, rows: u16) -> Result<(), String> {
     Ok(())
 }
 
-/// Write the bundled zsh shim to a per-user dir and return it for ZDOTDIR.
-fn install_zsh_integration() -> std::io::Result<std::path::PathBuf> {
-    let dir = std::env::temp_dir().join("termink-zsh");
+/// Write the bundled zsh shim to the app's own data dir (private to the user, unlike a
+/// temp dir another account could pre-create) and return it for ZDOTDIR.
+fn install_zsh_integration(app: &tauri::AppHandle) -> std::io::Result<std::path::PathBuf> {
+    let dir = app.path().app_data_dir().map_err(std::io::Error::other)?.join("zsh");
     std::fs::create_dir_all(&dir)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700))?;
+    }
     std::fs::write(dir.join(".zshenv"), include_str!("../shell/zsh/.zshenv"))?;
     std::fs::write(dir.join(".zshrc"), include_str!("../shell/zsh/.zshrc"))?;
     Ok(dir)
