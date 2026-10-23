@@ -1,6 +1,7 @@
 [package]
 name = "termink"
 version = "0.1.0"
+license = "MIT"
 edition = "2021"
 
 # the app binary, and so the Dock and menu name in dev, is always "TermInk"
