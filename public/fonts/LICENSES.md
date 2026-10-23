@@ -1,13 +1,13 @@
 # Bundled fonts — licenses
 
-The woff2 files in this directory are fonts/ files added from Agent-Decoder (bundled with TermInk). **All are licensed under the SIL Open Font License, Version 1.1
+The woff2 files in this directory are bundled with TermInk. **All are licensed under the SIL Open Font License, Version 1.1
 (OFL-1.1).** Their copyright notices are retained below, and the full OFL-1.1
 text follows. Where a font declares a Reserved Font Name (RFN), that name must
 not be used on Modified Versions of the font.
 
 | Font | Copyright | Source |
 | --- | --- | --- |
-| Monaspace Argon | Copyright (c) 2023 GitHub | https://github.com/githubnext/monaspace |
+| Monaspace (Argon, Neon, Xenon, Radon, Krypton) | Copyright (c) 2023, GitHub — RFN: "Monaspace" (incl. subfamilies) | https://github.com/githubnext/monaspace |
 | Source Code Pro | Copyright 2010–2019 Adobe — RFN: "Source" | https://github.com/adobe-fonts/source-code-pro |
 | Fira Code | Copyright 2014–2020 The Fira Code Project Authors — RFN: "Fira Code" | https://github.com/tonsky/FiraCode |
 | JetBrains Mono | Copyright 2020 The JetBrains Mono Project Authors | https://github.com/JetBrains/JetBrainsMono |
@@ -15,7 +15,9 @@ not be used on Modified Versions of the font.
 | Xanh Mono | Copyright 2020 The XanhMono Project Authors | https://github.com/yellow-type-foundry/xanhmono |
 | JuliaMono | Copyright (c) 2020–2023 cormullion | https://github.com/cormullion/juliamono |
 | Spline Sans Mono | Copyright 2022 The Spline Sans Mono Project Authors | https://github.com/SorkinType/SplineSansMono |
-| Ioskeley Mono | Copyright (c) 2025 Ahmed Hatem | https://github.com/ahatem/IoskeleyMono |
+| Ioskeley Mono | Copyright (c) 2025, Ahmed Hatem | https://github.com/ahatem/IoskeleyMono |
+| Maple Mono | Copyright 2022 The Maple Mono Project Authors | https://github.com/subframe7536/maple-font |
+| Victor Mono | Copyright (c) 2021, Rune Bjørnerås | https://github.com/rubjo/victor-mono |
 
 ---
 
