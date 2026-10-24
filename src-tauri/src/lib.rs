@@ -16,7 +16,7 @@ struct Pty {
 struct PtyState(Mutex<Option<Pty>>, AtomicU64);
 
 #[tauri::command]
-fn spawn(window: tauri::WebviewWindow, state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>) -> Result<(), String> {
+fn spawn(window: tauri::WebviewWindow, state: State<PtyState>, cols: u16, rows: u16, on_data: Channel<Vec<u8>>) -> Result<bool, String> {
     let pair = native_pty_system()
         .openpty(PtySize { rows, cols, pixel_width: 0, pixel_height: 0 })
         .map_err(|e| e.to_string())?;
@@ -28,8 +28,10 @@ fn spawn(window: tauri::WebviewWindow, state: State<PtyState>, cols: u16, rows: 
     let mut cmd = CommandBuilder::new(&shell);
     cmd.env("TERM", "xterm-256color");
     cmd.env("TERM_PROGRAM", "TermInk");
+    let mut integrated = false;   // true when the shell will emit OSC 133 prompt marks
     if shell.ends_with("zsh") {
         if let Ok(dir) = install_zsh_integration(window.app_handle()) {
+            integrated = true;
             if let Some(user) = std::env::var_os("ZDOTDIR") {
                 cmd.env("TERMINK_USER_ZDOTDIR", user);
             }
@@ -63,7 +65,7 @@ fn spawn(window: tauri::WebviewWindow, state: State<PtyState>, cols: u16, rows: 
         let _ = old.child.kill();
     }
     *state.0.lock().unwrap() = Some(Pty { master: pair.master, writer, child });
-    Ok(())
+    Ok(integrated)
 }
 
 #[tauri::command]

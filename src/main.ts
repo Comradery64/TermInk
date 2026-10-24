@@ -211,12 +211,17 @@ async function main() {
 
   const onData = new Channel<Uint8Array>();
   const dec = new TextDecoder();
-  onData.onmessage = (bytes) => panel.write(inkify(dec.decode(new Uint8Array(bytes), { stream: true })));
+  onData.onmessage = (bytes) => {
+    if (quietReady) settleReady();
+    panel.write(inkify(dec.decode(new Uint8Array(bytes), { stream: true })));
+  };
 
-  await invoke("spawn", { cols: term.cols, rows: term.rows, onData });
+  const integrated = await invoke<boolean>("spawn", { cols: term.cols, rows: term.rows, onData });
 
-  // ignore keystrokes until the shell has drawn its first prompt (OSC 133;A),
-  // or 2s have passed for shells without the integration
+  // Input is dropped (not queued) until the shell has drawn its first prompt (OSC 133;A). A shell
+  // without the integration never sends one: it is ready once its output goes quiet. A hard cap
+  // keeps a broken rc from blocking input for good.
+  if (!integrated) { quietReady = true; settleReady(); }
   setTimeout(() => (ready = true), 2000);
   const enc = new TextEncoder();
   term.onData((s) => { panel.noteInput(s); if (ready) invoke("write", { data: Array.from(enc.encode(s)) }); });
@@ -271,6 +276,9 @@ function keys(e: KeyboardEvent): boolean {
 const RESET_SGR = "\x1b[39m";
 let carry = "";
 let ready = false;
+let quietReady = false;   // no prompt marks to wait for: ready after output settles
+let quietTimer: number | undefined;
+function settleReady() { clearTimeout(quietTimer); quietTimer = window.setTimeout(() => (ready = true), 1000); }
 function inkify(chunk: string): string {
   let s = carry + chunk;
   carry = "";
