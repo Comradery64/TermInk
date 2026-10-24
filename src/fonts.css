@@ -1,4 +1,4 @@
-/* Bundled monospace faces (all OFL 1.1). */
+/* Bundled monospace faces (OFL 1.1 unless noted; licenses: public/fonts/LICENSES.md). */
 @font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
 @font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
 @font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
@@ -32,3 +32,11 @@
 @font-face { font-family: "JuliaMono"; src: url("/fonts/julia-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
 @font-face { font-family: "Spline Sans Mono"; src: url("/fonts/spline-sans-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
 @font-face { font-family: "Ioskeley Mono"; src: url("/fonts/ioskeley-mono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Illinois Mono"; src: url("/fonts/IllinoisMono-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Illinois Mono"; src: url("/fonts/IllinoisMono-Italic.ttf") format("truetype"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Illinois Mono"; src: url("/fonts/IllinoisMono-Bold.ttf") format("truetype"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Illinois Mono"; src: url("/fonts/IllinoisMono-BoldItalic.ttf") format("truetype"); font-weight: 700; font-style: italic; }
+/* OpenDyslexic Mono (Bitstream Vera + CC BY 3.0) has one face, Comic Mono (MIT) no italic: the rest is synthesized */
+@font-face { font-family: "OpenDyslexic Mono"; src: url("/fonts/OpenDyslexicMono-Regular.otf") format("opentype"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Comic Mono"; src: url("/fonts/ComicMono.ttf") format("truetype"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Comic Mono"; src: url("/fonts/ComicMono-Bold.ttf") format("truetype"); font-weight: 700; font-style: normal; }

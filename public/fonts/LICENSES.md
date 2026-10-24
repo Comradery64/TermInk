@@ -1,7 +1,7 @@
 # Bundled fonts — licenses
 
-The woff2 files in this directory are bundled with TermInk. **All are licensed under the SIL Open Font License, Version 1.1
-(OFL-1.1).** Their copyright notices are retained below, and the full OFL-1.1
+The fonts in this directory are bundled with TermInk. **All are licensed under the SIL Open Font License, Version 1.1
+(OFL-1.1)**, except OpenDyslexic Mono and Comic Mono (see the end of this file). Their copyright notices are retained below, and the full OFL-1.1
 text follows. Where a font declares a Reserved Font Name (RFN), that name must
 not be used on Modified Versions of the font.
 
@@ -18,6 +18,7 @@ not be used on Modified Versions of the font.
 | Ioskeley Mono | Copyright (c) 2025, Ahmed Hatem | https://github.com/ahatem/IoskeleyMono |
 | Maple Mono | Copyright 2022 The Maple Mono Project Authors | https://github.com/subframe7536/maple-font |
 | Victor Mono | Copyright (c) 2021, Rune Bjørnerås | https://github.com/rubjo/victor-mono |
+| Illinois Mono | Copyright 2024 MadSimple | https://github.com/MadSimple/illinois-mono |
 
 ---
 
@@ -114,3 +115,12 @@ INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
+
+---
+
+## Fonts under other licenses
+
+| Font | Copyright | License |
+| --- | --- | --- |
+| OpenDyslexic Mono | © Bitstream; OpenDyslexic changes © 2012 Abelardo Gonzalez (https://opendyslexic.org) | Bitstream Vera license + CC BY 3.0, full text in `OpenDyslexicMono-LICENSE` |
+| Comic Mono | Copyright (c) 2018 Shannon Miwa, 2019 dtinth (https://github.com/dtinth/comic-mono-font) | MIT, full text in `ComicMono-LICENSE` |

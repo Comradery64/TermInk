@@ -28,6 +28,8 @@ export const CORE: Section[] = [
       ["JetBrains Mono", "JetBrains Mono · tall x-height"], ["Libertinus Mono", "Libertinus Mono · typewriter serif"],
       ["Xanh Mono", "Xanh Mono · display serif"], ["JuliaMono", "JuliaMono · wide Unicode"],
       ["Spline Sans Mono", "Spline Sans Mono · geometric"], ["Ioskeley Mono", "Ioskeley Mono · narrow"],
+      ["Illinois Mono", "Illinois Mono · Lexend, easy reading"], ["OpenDyslexic Mono", "OpenDyslexic Mono · dyslexia-friendly"],
+      ["Comic Mono", "Comic Mono · comic"],
     ] },
   ] },
   { tab: "Text", title: "Size & spacing", fields: [

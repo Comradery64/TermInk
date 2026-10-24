@@ -15,7 +15,7 @@ A terminal emulator that behaves like an e-ink reader panel. Built with Tauri v2
 - **Real text:** the DOM renderer keeps glyphs as real text, so every effect is CSS over them, including an ink texture.
 - **Cursors:** a grid-snapping block mouse cursor that matches the text cursor.
 - **Bezel and Dock icon:** an optional bezel, and a Dock icon (bezel or plain) that follows the panel mode.
-- **Settings:** a drawer with Text, Screen, Device and Terminal tabs. 15 bundled monospace fonts.
+- **Settings:** a drawer with Text, Screen, Device and Terminal tabs. 18 bundled monospace fonts, including OpenDyslexic Mono and Illinois Mono for easier reading.
 - **Shell integration (zsh):** OSC 133 prompt marks drive the input ink.
 
 ## Keys
@@ -49,6 +49,6 @@ The icon art is rendered from the app's own CSS with headless Chrome. Edit `tool
 
 ## Licenses
 
-TermInk is MIT licensed, see [LICENSE](LICENSE). Bundled fonts are under the SIL Open Font License 1.1, see [public/fonts/LICENSES.md](public/fonts/LICENSES.md).
+TermInk is MIT licensed, see [LICENSE](LICENSE). Bundled fonts are under the SIL Open Font License 1.1, except OpenDyslexic Mono (Bitstream Vera + CC BY 3.0) and Comic Mono (MIT), see [public/fonts/LICENSES.md](public/fonts/LICENSES.md).
 
 A Reishi.dev project.
