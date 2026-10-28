@@ -5,6 +5,9 @@ The fonts in this directory are bundled with TermInk. **All are licensed under t
 text follows. Where a font declares a Reserved Font Name (RFN), that name must
 not be used on Modified Versions of the font.
 
+The Monaspace files are unmodified copies from GitHub's official v1.400 webfont release
+(`monaspace-webfont-static-v1.400.zip`), so they keep the Reserved Font Name.
+
 | Font | Copyright | Source |
 | --- | --- | --- |
 | Monaspace (Argon, Neon, Xenon, Radon, Krypton) | Copyright (c) 2023, GitHub — RFN: "Monaspace" (incl. subfamilies) | https://github.com/githubnext/monaspace |

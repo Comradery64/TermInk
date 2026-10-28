@@ -1,19 +1,20 @@
 /* Bundled monospace faces (OFL 1.1 unless noted; licenses: public/fonts/LICENSES.md). */
-@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
-@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
-@font-face { font-family: "Monaspace Neon"; src: url("/fonts/monaspace-neon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
-@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
-@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
-@font-face { font-family: "Monaspace Argon"; src: url("/fonts/monaspace-argon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
-@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
-@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
-@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/monaspace-krypton-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
-@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
-@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
-@font-face { font-family: "Monaspace Radon"; src: url("/fonts/monaspace-radon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
-@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; }
-@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
-@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/monaspace-xenon-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+/* Monaspace line metrics pinned to the earlier fontsource cut so the layout is unchanged (v1.400 grew ascent, cut line gap); files unmodified */
+@font-face { font-family: "Monaspace Neon"; src: url("/fonts/MonaspaceNeon-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Neon"; src: url("/fonts/MonaspaceNeon-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Neon"; src: url("/fonts/MonaspaceNeon-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Argon"; src: url("/fonts/MonaspaceArgon-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Argon"; src: url("/fonts/MonaspaceArgon-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Argon"; src: url("/fonts/MonaspaceArgon-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/MonaspaceKrypton-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/MonaspaceKrypton-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Krypton"; src: url("/fonts/MonaspaceKrypton-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Radon"; src: url("/fonts/MonaspaceRadon-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Radon"; src: url("/fonts/MonaspaceRadon-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Radon"; src: url("/fonts/MonaspaceRadon-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/MonaspaceXenon-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/MonaspaceXenon-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
+@font-face { font-family: "Monaspace Xenon"; src: url("/fonts/MonaspaceXenon-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; ascent-override: 78.25%; descent-override: 21.75%; line-gap-override: 20%; }
 @font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
 @font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
 @font-face { font-family: "Victor Mono"; src: url("/fonts/VictorMono-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
