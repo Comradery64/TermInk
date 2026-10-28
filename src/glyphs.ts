@@ -72,7 +72,17 @@ function fixPos([x, y, w, h]: Rect): Rect {
 const cache = new Map<string, string | null>();
 const style = (ch: string) => { if (!cache.has(ch)) cache.set(ch, paint(ch)); return cache.get(ch)!; };
 
+/**
+ * Backgrounds are pale on the panel (main.ts) except paint, a logo's color, which keeps ink
+ * strength. Paint skips the background dither, so it is the same tone as the glyphs drawn in it.
+ */
+const isPaint = (css: string) => {
+  const m = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?/.exec(css);
+  return !!m && m[4] !== "0" && (0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3]) / 255 < 0.6;
+};
+
 function redraw(row: HTMLElement) {
+  row.querySelectorAll<HTMLElement>('span[style*="background-color"]').forEach((s) => s.classList.toggle("paint", isPaint(s.style.backgroundColor)));
   if (!DRAWN.test(row.textContent ?? "")) return;
   for (const node of Array.from(row.childNodes)) {
     const text = node.textContent ?? "";
@@ -93,8 +103,9 @@ function redraw(row: HTMLElement) {
       const s = span ? (span.cloneNode(false) as HTMLElement) : document.createElement("span");
       s.classList.add("glyph");
       // under the shapes: the cell's background, dithered like every other background (style.css)
-      s.style.background = cellBg && cellBg !== "rgba(0, 0, 0, 0)"
-        ? `${bg}, radial-gradient(circle, var(--page) 0.55px, transparent 0.8px) 0 0 / 2px 2px ${cellBg}` : bg;
+      s.style.background = !cellBg || cellBg === "rgba(0, 0, 0, 0)" ? bg
+        : isPaint(cellBg) ? `${bg}, ${cellBg}`
+        : `${bg}, radial-gradient(circle, var(--page) 0.55px, transparent 0.8px) 0 0 / 2px 2px ${cellBg}`;
       frag.append(s);
     }
     flush();

@@ -79,6 +79,7 @@ html, body { background: var(--bezel); }
   background-image: radial-gradient(circle, var(--page) 0.55px, transparent 0.8px);
   background-size: 2px 2px;
 }
+.xterm-rows span.paint { background-image: none; }   /* a logo's color: solid, like its glyphs (glyphs.ts) */
 
 /* ---- refresh: rows settle through grey steps (after the inverted flash, when there is one) ---- */
 .xterm-rows > div.settle { animation: eink-settle 210ms steps(1, end) both; }

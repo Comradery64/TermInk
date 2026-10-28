@@ -291,17 +291,22 @@ function inkify(chunk: string): string {
     return m === "B" ? INPUT_SGR : m === "A" || m === "C" ? RESET_SGR : "";
   });
   return highlight(s).replace(/\x1b\[([0-9;:]*)m/g, (seq, params: string, at: number, all: string) =>
-    /^[\u2580-\u2590\u2594-\u259f]/.test(all.slice(at + seq.length)) ? remapBlockSgr(seq, params) : remapSgr(seq, params));
+    isPaint(params, all.slice(at + seq.length)) ? remapPaintSgr(seq, params) : remapSgr(seq, params));
 }
 
 /**
- * A color painting block elements (logos like Claude Code's) is paint, not text: it maps like a
- * background, so glyph edges match the background-filled cells beside them. Shades (░▒▓) stay text:
- * they draw meters, at a fraction of the ink.
+ * A background color with only spaces and block elements on it, up to its reset, is paint (a logo
+ * like Claude Code's), not a panel behind text: it keeps its color like ink instead of fading
+ * to a pale tint, so it matches the block glyphs drawn in the same color.
  */
-function remapBlockSgr(seq: string, params: string): string {
-  if (/(^|;)48[;:]/.test(params)) return remapSgr(seq, params);
-  return remapSgr(seq, params.replace(/(^|;)38([;:])/, "$148$2")).replace(/([[;])48;/, "$138;");
+function isPaint(params: string, after: string): boolean {
+  if (!/(^|;)48[;:]/.test(params)) return false;
+  const run = after.split(/\x1b\[(?:0|49)?m|[\r\n]/)[0].replace(/\x1b\[[0-9;:?]*[A-Za-z]/g, "");
+  return /^[ \u2580-\u2590\u2594-\u259f]+$/.test(run);
+}
+
+function remapPaintSgr(seq: string, params: string): string {
+  return remapSgr(seq, params.replace(/(^|;)48([;:])/, "$138$2")).replace(/([[;])38;/, "$148;");
 }
 
 /** True only for an escape sequence that is genuinely cut off at the chunk end. */
