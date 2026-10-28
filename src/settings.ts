@@ -9,7 +9,7 @@ export type Field =
   | (Base & { type: "toggle"; default: boolean })
   | (Base & { type: "range"; default: number; min: number; max: number; step: number; unit?: string })
   | (Base & { type: "select"; default: string; options: [string, string][] })
-  // options: [css family, label]; each choice is previewed in its own face
+  // options: [css family, label], alphabetical by label; each choice is previewed in its own face
   | (Base & { type: "font"; default: string; options: [string, string][] })
   | (Base & { type: "color"; default: string });
 // sections sharing a tab and title render as one group, so hosts can add fields to a shared group
@@ -20,16 +20,15 @@ export type Values = Record<string, boolean | number | string>;
 export const CORE: Section[] = [
   { tab: "Text", title: "Typeface", fields: [
     { key: "font", label: "Font", type: "font", default: "Monaspace Xenon", options: [
-      ["Monaspace Xenon", "Monaspace Xenon · slab serif"], ["Monaspace Neon", "Monaspace Neon · neo-grotesque"],
+      ["Comic Mono", "Comic Mono · comic"], ["Fira Code", "Fira Code · ligatures"],
+      ["Illinois Mono", "Illinois Mono · Lexend, easy reading"], ["Ioskeley Mono", "Ioskeley Mono · narrow"],
+      ["JetBrains Mono", "JetBrains Mono · tall x-height"], ["JuliaMono", "JuliaMono · wide Unicode"],
+      ["Libertinus Mono", "Libertinus Mono · typewriter serif"], ["Maple Mono", "Maple Mono · rounded"],
       ["Monaspace Argon", "Monaspace Argon · humanist"], ["Monaspace Krypton", "Monaspace Krypton · mechanical"],
-      ["Monaspace Radon", "Monaspace Radon · handwriting"], ["Victor Mono", "Victor Mono · cursive italics"],
-      ["Maple Mono", "Maple Mono · rounded"],
-      ["Source Code Pro", "Source Code Pro · classic"], ["Fira Code", "Fira Code · ligatures"],
-      ["JetBrains Mono", "JetBrains Mono · tall x-height"], ["Libertinus Mono", "Libertinus Mono · typewriter serif"],
-      ["Xanh Mono", "Xanh Mono · display serif"], ["JuliaMono", "JuliaMono · wide Unicode"],
-      ["Spline Sans Mono", "Spline Sans Mono · geometric"], ["Ioskeley Mono", "Ioskeley Mono · narrow"],
-      ["Illinois Mono", "Illinois Mono · Lexend, easy reading"], ["OpenDyslexic Mono", "OpenDyslexic Mono · dyslexia-friendly"],
-      ["Comic Mono", "Comic Mono · comic"],
+      ["Monaspace Neon", "Monaspace Neon · neo-grotesque"], ["Monaspace Radon", "Monaspace Radon · handwriting"],
+      ["Monaspace Xenon", "Monaspace Xenon · slab serif"], ["OpenDyslexic Mono", "OpenDyslexic Mono · dyslexia-friendly"],
+      ["Source Code Pro", "Source Code Pro · classic"], ["Spline Sans Mono", "Spline Sans Mono · geometric"],
+      ["Victor Mono", "Victor Mono · cursive italics"], ["Xanh Mono", "Xanh Mono · display serif"],
     ] },
   ] },
   { tab: "Text", title: "Size & spacing", fields: [
