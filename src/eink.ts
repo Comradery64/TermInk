@@ -261,8 +261,9 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     if (/\x1b\[[23]J|\x1bc/.test(s)) sawClear = true;   // clear = full refresh, once things are quiet
     queue += s;
     lastData = performance.now();
-    // the echo of a keystroke draws at once: typing in place is the one thing a reader never lags on
-    if (lastData - lastInput < 150 && queue.length < 256 && !syncOpen(queue) && !sleeping) {
+    // while you are typing, what comes back is the echo: it draws at once, one character at a
+    // time, whatever the frame rate. (Enter ends typing, so command output keeps its refresh.)
+    if (lastData - lastInput < 1000 && queue.length < 4096 && !syncOpen(queue) && !sleeping) {
       clearTimeout(timer); flush(true); return;
     }
     if (!timer && !sleeping) timer = window.setTimeout(flush, Math.max(0, lastFlush + FRAME_MS - performance.now()));
@@ -284,7 +285,9 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     held = 0;
     const q = queue; queue = "";
     lastFlush = performance.now();
-    snapshot = rows().innerHTML; snapText = lines();
+    // the before-image only feeds ghosts and refresh sizing; typing needs neither, and copying the
+    // whole screen's HTML on every keystroke is what makes a big window lag
+    snapshot = urgent ? "" : rows().innerHTML; snapText = lines();
     flushBytes = q.length;
     // floods of scrolling output only: a full-screen app repainting is a live view, not a flood
     if (q.length > A2_BYTES && term.buffer.active.type === "normal") a2(true);
