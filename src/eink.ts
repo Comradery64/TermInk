@@ -116,6 +116,10 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   sleep.innerHTML = `<div class="art"></div><div class="name">TermInk</div><div class="hint">Sleeping · click to wake</div>`;
   const bezel = mk("bezel", document.body);
   bezel.setAttribute("data-tauri-drag-region", "");
+  // Without a bezel the title bar is the handle (Tauri only drags from the element hit, so its
+  // children carry the mark too); with neither, a thin invisible strip along the top edge.
+  [status, ...Array.from(status.querySelectorAll("*"))].forEach((e) => e.setAttribute("data-tauri-drag-region", ""));
+  mk("grip").setAttribute("data-tauri-drag-region", "");
   const frame = mk("frame", document.body);
   frame.innerHTML = `<span class="mark">TermInk</span>`;
   // The frame is the bezel drawn again above the screen, like plastic over glass, with a
@@ -178,6 +182,7 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     SLEEP_AFTER_MS = Number(v.sleep) * 1000;
     sheet.classList.toggle("no-status", !v.status);
     sheet.classList.toggle("no-footer", !v.footer);
+    sheet.classList.toggle("grip", !v.status && Number(v.bezel) + Number(v.bezelTop) < 12);
     for (const [k, sel] of BAR_ITEMS)
       sheet.querySelectorAll<HTMLElement>(sel).forEach((e) => e.classList.toggle("off", !v[k]));
     if (sheet.dataset.light !== v.light) sheet.dataset.light = String(v.light);
