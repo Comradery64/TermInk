@@ -291,12 +291,13 @@ function inkify(chunk: string): string {
     return m === "B" ? INPUT_SGR : m === "A" || m === "C" ? RESET_SGR : "";
   });
   return highlight(s).replace(/\x1b\[([0-9;:]*)m/g, (seq, params: string, at: number, all: string) =>
-    /^[\u2580-\u259f]/.test(all.slice(at + seq.length)) ? remapBlockSgr(seq, params) : remapSgr(seq, params));
+    /^[\u2580-\u2590\u2594-\u259f]/.test(all.slice(at + seq.length)) ? remapBlockSgr(seq, params) : remapSgr(seq, params));
 }
 
 /**
  * A color painting block elements (logos like Claude Code's) is paint, not text: it maps like a
- * background, so glyph edges match the background-filled cells beside them.
+ * background, so glyph edges match the background-filled cells beside them. Shades (░▒▓) stay text:
+ * they draw meters, at a fraction of the ink.
  */
 function remapBlockSgr(seq: string, params: string): string {
   if (/(^|;)48[;:]/.test(params)) return remapSgr(seq, params);

@@ -44,7 +44,9 @@ const DRAWN = /[─-▟]/;
 /** CSS background layers for one character, or null if we leave it to the font. */
 function paint(ch: string): string | null {
   const fill = (r: Rect, a = 1) => {
-    const c = a === 1 ? "currentColor" : `color-mix(in srgb, currentColor ${a * 100}%, transparent)`;
+    // shades mix with the page, not transparency: neighbouring cells overlap by a sub-pixel, and
+    // translucent layers would darken every seam
+    const c = a === 1 ? "currentColor" : `color-mix(in srgb, currentColor ${a * 100}%, var(--page))`;
     return `linear-gradient(${c},${c}) ${r[0] * 100}% ${r[1] * 100}% / ${r[2] * 100}% ${r[3] * 100}% no-repeat`;
   };
   if (BLOCKS[ch]) return BLOCKS[ch].map((r) => fill(fixPos(r))).join(",");
@@ -76,6 +78,7 @@ function redraw(row: HTMLElement) {
     const text = node.textContent ?? "";
     if (!DRAWN.test(text)) continue;
     const span = node.nodeType === Node.TEXT_NODE ? null : (node as HTMLElement);
+    const cellBg = span?.style.backgroundColor || (span ? getComputedStyle(span).backgroundColor : "");   // the shapes sit on the cell's own background
     const frag = document.createDocumentFragment();
     let run = "";
     const flush = () => {
@@ -89,7 +92,9 @@ function redraw(row: HTMLElement) {
       flush();
       const s = span ? (span.cloneNode(false) as HTMLElement) : document.createElement("span");
       s.classList.add("glyph");
-      s.style.background = bg;
+      // under the shapes: the cell's background, dithered like every other background (style.css)
+      s.style.background = cellBg && cellBg !== "rgba(0, 0, 0, 0)"
+        ? `${bg}, radial-gradient(circle, var(--page) 0.55px, transparent 0.8px) 0 0 / 2px 2px ${cellBg}` : bg;
       frag.append(s);
     }
     flush();
