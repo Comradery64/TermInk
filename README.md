@@ -6,7 +6,7 @@ A terminal emulator that behaves like an e-ink reader panel. Built with Tauri v2
 | --- | --- |
 | ![TermInk in grey e-ink mode](docs/screenshots/eink.png) | ![TermInk in Kaleido color mode](docs/screenshots/kaleido.png) |
 
-![TermInk settings](docs/screenshots/settings.png)
+![Claude Code in TermInk, explaining why e-ink flashes black on a full refresh](docs/screenshots/claude-code.png)
 
 ## What it does
 
