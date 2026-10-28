@@ -261,6 +261,10 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
     if (/\x1b\[[23]J|\x1bc/.test(s)) sawClear = true;   // clear = full refresh, once things are quiet
     queue += s;
     lastData = performance.now();
+    // the echo of a keystroke draws at once: typing in place is the one thing a reader never lags on
+    if (lastData - lastInput < 150 && queue.length < 256 && !syncOpen(queue) && !sleeping) {
+      clearTimeout(timer); flush(true); return;
+    }
     if (!timer && !sleeping) timer = window.setTimeout(flush, Math.max(0, lastFlush + FRAME_MS - performance.now()));
   }
 
@@ -270,11 +274,11 @@ export function createPanel(term: Terminal, sheet: HTMLElement, prefsPage: HTMLE
   // up to a cap so a continuous stream still gets drawn.
   let lastData = 0, held = 0;
   const syncOpen = (q: string) => q.lastIndexOf("\x1b[?2026h") > q.lastIndexOf("\x1b[?2026l");
-  function flush() {
+  function flush(urgent = false) {
     timer = 0;
     if (sleeping || !queue) return;
     const now = performance.now();
-    if (held < 250 && (syncOpen(queue) || now - lastData < 12)) {
+    if (!urgent && held < 250 && (syncOpen(queue) || now - lastData < 12)) {
       held += 12; timer = window.setTimeout(flush, 12); return;
     }
     held = 0;
